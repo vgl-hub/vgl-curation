@@ -10,11 +10,20 @@ parser = argparse.ArgumentParser(
  
 parser.add_argument('-1', '--hap1', dest="hap1",required=True, help='Folder containing the files for Haplotype 1 (hap.unlocs.no_hapdups.agp and inter_chr.tsv) ')  
 parser.add_argument('-2', '--hap2', dest="hap2", required=True, help='Folder containing the files for Haplotype 2 (hap.unlocs.no_hapdups.agp and inter_chr.tsv) ') 
+parser.add_argument('-q', '--query', dest="query", default="Hap_2", help='Haplotype use as Query for MashMap: Hap_1 or Hap_2 (Default Hap_2)')  
+parser.add_argument('-r', '--reference', dest="reference", default="Hap_1", help='Haplotype use as reference for MashMap: Hap_1 or Hap_2 (Default Hap_1)')  
 parser.add_argument('-a', '--agp', dest="agp", required=True, help='Path to the curated AGP file (containing the tags Micro1 and Micro2)')       
 parser.add_argument('-m', '--mashmap', dest="mashmap", required=True, help='Path to the curated Mashmap output')  
 parser.add_argument('-o', '--out', dest="out_file", required=True, help='Path output')  
 
 args = parser.parse_args()
+
+
+if args.query!="Hap_1" and args.query!="Hap_2":
+    raise ValueError("The query parameter should be Hap_1 or Hap_2")
+if args.reference!="Hap_1" and args.reference!="Hap_2":
+    raise ValueError("The reference parameter should be Hap_1 or Hap_2")
+
 
 try:
     dico_scaffolds_hap1= pd.read_csv(args.hap1+"/hap.unlocs.no_hapdups.agp", sep="\t", header=None)
@@ -32,6 +41,8 @@ try:
     mashmap_out=pd.read_csv(args.mashmap, sep="\t", header=None)
 except FileNotFoundError:
     print(f"Error: The file '{args.mashmap}' was not found.")
+
+mashmap_out=mashmap_out.rename(columns={0:args.query, 1:'Query length',2:'Query 0-based start',3:'Query 0-based end',4:'Strand',5:args.reference, 6:'Target length', 7:'Target 0-based start', 8:'Target 0-based end',12:'Mapping nucleotide identity'})
 
 dico_scaffolds_hap2=dico_scaffolds_hap2[dico_scaffolds_hap2[11]=="Micro2"][[0,5]]
 dico_scaffolds_hap1=dico_scaffolds_hap1[dico_scaffolds_hap1[11]=="Micro1"][[0,5]]
@@ -89,7 +100,19 @@ except Exception as e:
 filtered_mashmap=pd.DataFrame(columns=mashmap_out.columns)
 
 for index, row in mashmap_out.iterrows():
-    if  ((Paired['Hap_1'] == row[[0,5]].iloc[0]) & (Paired["Hap_2"] == row[[0,5]].iloc[1])).any():
+    if  ((Paired['Hap_1'] == row[[args.query,args.reference]].iloc[1]) & (Paired["Hap_2"] == row[[args.query,args.reference]].iloc[0])).any():
         filtered_mashmap.loc[len(filtered_mashmap)] = row
 
-filtered_mashmap.to_csv(args.out_file, index=False, header=False, sep="\t")
+orientations = filtered_mashmap[[args.query,"Strand",args.reference]]
+
+# Group by Reference and Query, then count Sign occurrences
+counts = orientations.groupby(["Hap_1","Hap_2"])["Strand"].value_counts()
+
+# Get the sign with the highest count per group
+most_frequent_sign = counts.groupby(level=[0, 1]).idxmax().apply(lambda x: x[2])  # x is a tuple (Reference, query, sign)
+
+# Combine into a final dataframe
+result = most_frequent_sign.to_frame(name='Main Orientation')
+
+result.to_csv(args.out_file, index=True, header=True, sep="\t")
+
