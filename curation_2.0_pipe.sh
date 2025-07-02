@@ -43,29 +43,27 @@ printf "Rapid-curation-2.0 scripts located in: $pth\n"
 ## Programs/tools
 # use_gfastats=/vggpfs/fs3/vgl/store/nbrajuka/gfastats/build/bin/gfastats
 # use_seqkit=/vggpfs/fs3/vgl/store/nbrajuka/conda/envs/statistics/bin/seqkit
-printf "Dependecies:\nBiopython v1.81\npandas\ngfastats v1.3.6\n" 
+printf "Dependecies:\nBiopython\npandas\ngfastats\nmashmap\nnatsort\nrb_sysopen" 
 
 # could reasonably put everything in a function and just call for both haps. 
 
-mkdir -p Hap_1
-mkdir -p Hap_2
 
 printf "\nOriginal assembly: ${fasta} \nPretextView generated AGP: ${agpfile}\n\n" ### but checks/breakpoints for if these aren't provided.
 
 printf "Running AGPcorrect on the PretextView generated agp to correct for sequence lengths.\n" 
 printf "python3 ${pth}/AGPcorrect.py ${fasta} ${agpfile}\n\n"
-python3 $pth/AGPcorrect.py ${fasta} ${agpfile} 
+python3 $pth/AGPcorrect.py ${fasta} ${agpfile} > corrected.agp
 
 printf "Splitting the haplotypes from the corrected AGP. Outputs sent to respective directories.\n"
-printf "python3 $pth/hap_split.py\n\n"
-python3 $pth/hap_split.py 
+printf "python3 $pth/hap_split.py -1 Hap_1/hap.agp -2 Hap_2/hap.agp -a corrected.agp\n\n"
+python3 $pth/hap_split.py  -1 Hap_1/hap.agp -2 Hap_2/hap.agp -a corrected.agp 
 
 printf "Assigning unlocs before the agp is imposed on the fasta.\n"
 ## If the --agp-to-path in the next block is run first the unlocs will get assimilated into their main assigned scaffolds - they need to be differentiated first.
-printf "python3 $pth/unloc.py Hap_1\n" 
-printf "python3 $pth/unloc.py Hap_2\n\n"
-python3 $pth/unloc.py Hap_1
-python3 $pth/unloc.py Hap_2
+printf "python3 $pth/unloc.py -a Hap_1/hap.agp -o Hap_1 \n\n" 
+printf "python3 $pth/unloc.py -a Hap_2/hap.agp -o Hap_2 \n\n"
+python3 $pth/unloc.py -a Hap_1/hap.agp -o Hap_1
+python3 $pth/unloc.py -a Hap_2/hap.agp -o Hap_2
 
 printf "Imposing the haplotypic agp on the original fasta to generate a curated fasta.\n"
 printf "gfastats $fasta --agp-to-path Hap_1/hap.unlocs.no_hapdups.agp --sort largest -o Hap_1/hap.sorted.fa\n"
@@ -81,11 +79,27 @@ printf "gfastats Hap_2/hap.unloc.no_hapdups.fa --sort largest -o Hap_2/hap.sorte
 gfastats Hap_2/hap.unlocs.no_hapdups.fa --sort largest -o Hap_2/hap.sorted.fa 2>> logs/std.${count}.out 
 
 printf "\nSubstituting scaffold for chromosome assignments.\n"
-printf "python3 $pth/chromosome_assignment.py Hap_1\n"
-python3 $pth/chromosome_assignment.py Hap_1
+printf "python3 $pth/chromosome_assignment.py -a Hap_1/hap.unlocs.no_hapdups.agp -f Hap_1/hap1_sorted.fasta -o Hap_1 \n\n"
+python3 $pth/chromosome_assignment.py -a Hap_1/hap.unlocs.no_hapdups.agp -f Hap_1/hap.sorted.fa -o Hap_1
 
-printf "python3 $pth/chromosome_assignment.py Hap_2\n\n"
-python3 $pth/chromosome_assignment.py Hap_2 
+printf "python3 $pth/chromosome_assignment.py -a Hap_2/hap.unlocs.no_hapdups.agp -f Hap_2/hap2_sorted.fasta -o Hap_2\n\n"
+python3 $pth/chromosome_assignment.py -a Hap_2/hap.unlocs.no_hapdups.agp -f Hap_2/hap.sorted.fa -o Hap_2
+
+
+
+printf "mashmap -r Hap_1/hap.chr_level.fa  -q Hap_2/hap.chr_level.fa -f one-to-one -t 16 -s 50000 --pi 90 \n\n"
+mashmap -r Hap_1/hap.chr_level.fa  -q Hap_2/hap.chr_level.fa -f one-to-one -t 16 -s 50000 --pi 90 \n\
+
+printf "python3 $pth/filter_mashmap_with_tagged_pairs.py  -1 Hap\n\n"
+python3 $pth/filter_mashmap_with_tagged_pairs.py  -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -r Hap_1 -q Hap_2 -a corrected.agp -m mashmap.out -o tagged_pairs/
+
+
+printf "gfastats Hap_2/hap2_sorted.fasta  -k tagged_pairs/rvcp.sak  -o Hap_2/hap2.reoriented.fasta \n\n"
+gfastats Hap_2/hap2_sorted.fasta  -k tagged_pairs/rvcp.sak  -o Hap_2/hap2.reoriented.fasta
+
+printf "ruby $pth/update_mapping.rb -f Hap_2/hap2.reoriented.fasta -t tagged_pairs/hap2.vs.hap1.tsv >  Hap_2/hap2.reoriented.renamed.fasta \n\n"
+ruby $pth/update_mapping.rb -f Hap_2/hap2.reoriented.fasta -t tagged_pairs/hap2.vs.hap1.tsv >  Hap_2/hap2.reoriented.renamed.fasta
+
 
 
 exec 1>&-
