@@ -3,7 +3,7 @@ import argparse
 from io import StringIO
 from natsort import natsorted
 import textwrap
-
+import os
 
 parser = argparse.ArgumentParser(
                     prog='filter_mashmap_with_tagged_pairs',
@@ -12,9 +12,9 @@ parser = argparse.ArgumentParser(
                     formatter_class=argparse.RawTextHelpFormatter,
                     epilog=textwrap.dedent('''
                                            Outputs: 
-                                           - {prefix}rvcp.sak: SAK file for gfastats reversing of hap2 sequences
-                                           - {prefix}orientation.tsv:  Table with the orientation of Hap1 vs Hap2 scaffolds (The sign is the most represented in the mashmap alignments between two sequences)
-                                           - {prefix}renaming_map_hap2.tsv: The Mapping between old and new name of Haplotype 2. 
+                                           - {out_dir}/rvcp.sak: SAK file for gfastats reversing of hap2 sequences
+                                           - {out_dir}/orientation.tsv:  Table with the orientation of Hap1 vs Hap2 scaffolds (The sign is the most represented in the mashmap alignments between two sequences)
+                                           - {out_dir}/hap2.vs.hap1.tsv: The Mapping between hap2 and hap1 names. 
                                            '''))
  
 parser.add_argument('-1', '--hap1', dest="hap1",required=True, help='Path to the chromosome assignment file for  Haplotype 1 (inter_chr.tsv) ')  
@@ -23,9 +23,15 @@ parser.add_argument('-q', '--query', dest="query", default="Hap_2", help='Haplot
 parser.add_argument('-r', '--reference', dest="reference", default="Hap_1", help='Haplotype use as reference for MashMap: Hap_1 or Hap_2 (Default Hap_1)')  
 parser.add_argument('-a', '--agp', dest="agp", required=True, help='Path to the curated AGP file (containing the tags Micro1 and Micro2)')       
 parser.add_argument('-m', '--mashmap', dest="mashmap", required=True, help='Path to the curated Mashmap output')  
-parser.add_argument('-o', '--out', dest="out_pre", required=True, help='Path to output Prefix')  
+parser.add_argument('-o', '--out_dir', dest="out_dir", required=True, help='Path to output Prefix')  
 
 args = parser.parse_args()
+
+
+if '/' in args.out_dir:
+    tmp_list1=args.out_dir.split('/')
+    output_dir1="/".join(tmp_list1[:-1])
+os.makedirs(output_dir1, exist_ok=True)
 
 
 if args.query!="Hap_1" and args.query!="Hap_2":
@@ -112,17 +118,17 @@ result=result.reset_index()
 result['Hap_1'] = pd.Categorical(result['Hap_1'], categories=natsorted(result['Hap_1'].unique()), ordered=True)
 result = result.sort_values(by='Hap_1')
 
-result.to_csv(args.out_pre+"orientation.tsv", index=True, header=True, sep="\t")
+result.to_csv(args.out_dir+"/orientation.tsv", index=True, header=True, sep="\t")
 
 to_reverse = pd.DataFrame(columns=['Command', 'Hap2_SUPER'])
 to_reverse['Hap2_SUPER']=result[result['Main Orientation']=='-']["Hap_2"]
 to_reverse['Command']="RVCP"
 
 
-to_reverse.to_csv(args.out_pre+"rvcp.sak", index=False, header=False, sep="\t")
+to_reverse.to_csv(args.out_dir+"/rvcp.sak", index=False, header=False, sep="\t")
 
 renaming=result[['Hap_1','Hap_2']]
-renaming=renaming.rename(columns={'Hap_1':'New_name','Hap_2':'Old_name'})
-renaming['action']="RENAME"
-renaming[['Old_name','New_name']].to_csv(args.out_pre+"renaming_map_hap2.tsv", index=False, header=True, sep="\t")
+#renaming=renaming.rename(columns={'Hap_1':'New_name','Hap_2':'Old_name'})
+#renaming['action']="RENAME"
+renaming[['Hap_2','Hap_1']].to_csv(args.out_dir+"/hap2.vs.hap1.tsv", index=False, header=True, sep="\t")
 
