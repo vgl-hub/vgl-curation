@@ -2,12 +2,20 @@ import pandas as pd
 import argparse
 from io import StringIO
 from natsort import natsorted
+import textwrap
 
 
 parser = argparse.ArgumentParser(
                     prog='filter_mashmap_with_tagged_pairs',
                     description='Filter Mashmap output to keep only Scaffolds paired with the tags Micro1 and Micro2',
-                    usage='filter_mashmap_with_tagged_pairs.py -1 Hap_1/ -2 Hap_2/ -m mashmap.out -o filtered_mashmap.out')
+                    usage='filter_mashmap_with_tagged_pairs.py -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -q Hap_2 -r Hap_1 -agp curated_agp_with_micro_tags.agp -m mashmap.out -o results/',
+                    formatter_class=argparse.RawTextHelpFormatter,
+                    epilog=textwrap.dedent('''
+                                           Outputs: 
+                                           - {prefix}rvcp.sak: SAK file for gfastats reversing of hap2 sequences
+                                           - {prefix}orientation.tsv:  Table with the orientation of Hap1 vs Hap2 scaffolds (The sign is the most represented in the mashmap alignments between two sequences)
+                                           - {prefix}renaming_map_hap2.tsv: The Mapping between old and new name of Haplotype 2. 
+                                           '''))
  
 parser.add_argument('-1', '--hap1', dest="hap1",required=True, help='Path to the chromosome assignment file for  Haplotype 1 (inter_chr.tsv) ')  
 parser.add_argument('-2', '--hap2', dest="hap2", required=True, help='Path to the chromosome assignment file for Haplotype 2 (inter_chr.tsv) ') 
@@ -116,5 +124,5 @@ to_reverse.to_csv(args.out_pre+"rvcp.sak", index=False, header=False, sep="\t")
 renaming=result[['Hap_1','Hap_2']]
 renaming=renaming.rename(columns={'Hap_1':'New_name','Hap_2':'Old_name'})
 renaming['action']="RENAME"
-renaming[['action','Old_name','New_name']].to_csv(args.out_pre+"renaming_hap2.tsv", index=False, header=True, sep="\t")
+renaming[['Old_name','New_name']].to_csv(args.out_pre+"renaming_map_hap2.tsv", index=False, header=True, sep="\t")
 
