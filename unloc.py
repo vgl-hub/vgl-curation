@@ -4,9 +4,27 @@
 import csv 
 import pandas as pd
 import sys
+import argparse
+import textwrap
 
-outdir=sys.argv[1]
-hap=outdir + '/hap.agp'
+parser = argparse.ArgumentParser(
+                    prog='unloc.py',
+                    description="Modify the AGP to accomodate unlocalized pieces once in the haplotype-specific and corrected state. Also remove haplotig duplications from their origin haplotype - if they are painted it shouldn't be a problem to incorporate them into their correct haplotype. They just need to be removed from the original.",
+                    usage='unloc.py -a Hap_2/hap.agp  -o Hap_2',
+                    formatter_class=argparse.RawTextHelpFormatter,
+                    epilog=textwrap.dedent('''
+                                           Outputs: 
+                                           - {output_dir}/hap.unlocs.no_hapdups.agp: Processed AGP file
+                                           - {output_dir}/haplotigs.agp: AGP file containing the haplotig duplications
+                                           '''))
+parser.add_argument('-a', '--agp', required=True, help='Path to the haplotype AGP file')
+parser.add_argument('-o', '--output_dir', required=True, help='Output directory')  
+args = parser.parse_args()
+
+
+
+outdir=args.output_dir
+hap=args.agp
 
 header=[]
 agp_lines=[]
@@ -24,7 +42,7 @@ maxlen=max([len(entry) for entry in agp_lines])
 if maxlen < 11:
     ## Checking for presence of metadata tags - if no unlocs or haplotigs present, the script just generates a replicate agp and exits.
     print ("No metadata tags used. Are you sure there are no unlocs, haplotigs or sex chromosomes to label?")
-    with open ('hap.unlocs.no_hapdups.agp','w',newline='\n') as f:
+    with open (outdir+'/hap.unlocs.no_hapdups.agp','w',newline='\n') as f:
         writer=csv.writer(f,delimiter='\t')
         writer.writerows(header)
         writer.writerows(agp_lines)
