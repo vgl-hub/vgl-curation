@@ -9,9 +9,9 @@ import argparse
 import textwrap
 
 parser = argparse.ArgumentParser(
-                    prog='unloc.py',
+                    prog='chromosome_assignment.py',
                     description="Modify scaffold names to reflect chromosomal assignment.",
-                    usage='unloc.py -a Hap_2/hap.agp -o Hap_2',
+                    usage='chromosome_assignment.py -a Hap_2/hap.unlocs.no_hapdups.agp -f Hap_2/hap2_sorted.fasta -o Hap_2',
                     formatter_class=argparse.RawTextHelpFormatter,
                     epilog=textwrap.dedent('''
                                            Outputs: 
@@ -115,8 +115,6 @@ with open(hap_sort) as original:
             record.id=(re.sub(orig_name,super_name,record.id))
 
         new_records.append(SeqRecord(record.seq,id=record.id, description=""))
-
-print (inter_chr_dict)
 
 
 with open((outdir+"/inter_chr.tsv"),'w') as file: 
