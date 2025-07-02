@@ -3,19 +3,20 @@
 
 import csv 
 import pandas as pd
-import sys
 import argparse
 import textwrap
+import os
 
 parser = argparse.ArgumentParser(
                     prog='unloc.py',
                     description="Modify the AGP to accomodate unlocalized pieces once in the haplotype-specific and corrected state. Also remove haplotig duplications from their origin haplotype - if they are painted it shouldn't be a problem to incorporate them into their correct haplotype. They just need to be removed from the original.",
-                    usage='unloc.py -a Hap_2/hap.agp  -o Hap_2',
+                    usage='unloc.py -a Hap_2/hap.agp -o Hap_2',
                     formatter_class=argparse.RawTextHelpFormatter,
                     epilog=textwrap.dedent('''
                                            Outputs: 
                                            - {output_dir}/hap.unlocs.no_hapdups.agp: Processed AGP file
                                            - {output_dir}/haplotigs.agp: AGP file containing the haplotig duplications
+                                           - {output_dir}/unloc.log: Log of removed gap lines
                                            '''))
 parser.add_argument('-a', '--agp', required=True, help='Path to the haplotype AGP file')
 parser.add_argument('-o', '--output_dir', required=True, help='Output directory')  
@@ -23,8 +24,11 @@ args = parser.parse_args()
 
 
 
+
 outdir=args.output_dir
 hap=args.agp
+
+os.makedirs(outdir, exist_ok=True)
 
 header=[]
 agp_lines=[]
@@ -96,13 +100,15 @@ while line_num < num_lines:
         prox_lig_lines.append(current_line)
     line_num+=1
 
-final_list=[]
-for line in agp_list:
-    if line in prox_lig_lines:
-        print ("Gap line removed:", line)
-    else:
-        final_list.append(line)
 
+with open (outdir+'/unloc.log','w',newline='\n') as fl:
+    final_list=[]
+    for line in agp_list:
+        if line in prox_lig_lines:
+            fl.write("Gap line removed: "+ "\t".join(str(n) for n in line)+"\n")
+        else:
+            final_list.append(line)
+fl.close()
 
 haplotigs_list=[agp_df.iloc[ind].tolist() for ind in haplotigs]
 
