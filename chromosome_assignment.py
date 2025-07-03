@@ -1,10 +1,27 @@
 ## For the modification of scaffold names to reflect chromosomal assignment. 
 
 import csv
-import sys 
 import re
 from Bio import SeqIO, Seq
 from Bio.SeqRecord import SeqRecord
+
+import argparse
+import textwrap
+
+parser = argparse.ArgumentParser(
+                    prog='chromosome_assignment.py',
+                    description="Modify scaffold names to reflect chromosomal assignment.",
+                    usage='chromosome_assignment.py -a Hap_2/hap.unlocs.no_hapdups.agp -f Hap_2/hap2_sorted.fasta -o Hap_2',
+                    formatter_class=argparse.RawTextHelpFormatter,
+                    epilog=textwrap.dedent('''
+                                           Outputs: 
+                                           - {output_dir}/inter_chr.tsv:  Table mapping the scaffolds to their chromosomal assignment.
+                                           - {output_dir}/hap.chr_level.fa:  Fasta file with chromosomal level sequences.
+                                           '''))
+parser.add_argument('-a', '--agp', required=True, help='Path to the haplotype AGP without haplotig duplications')
+parser.add_argument('-f', '--fasta', required=True, help='Path to the sorted fasta file')
+parser.add_argument('-o', '--output_dir', required=True, help='Output directory')  
+args = parser.parse_args()
 
 
 #FUNCTIONS ----
@@ -17,7 +34,7 @@ def sex_chr_asn(sex_chr,chr_name):
             inter_chr_dict[record.id]=((record.id).replace(sex_chr,chr_name))
             record.id=((record.id).replace(sex_chr,chr_name))
     if 'unloc' in record.id:
-        if re.sub("_unloc_\d+$","",record.id) == sex_chr:
+        if re.sub("_unloc_[0-9]+$","",record.id) == sex_chr:
             inter_chr_dict[record.id]=((record.id)).replace(sex_chr,chr_name)
             record.id=((record.id).replace(sex_chr,chr_name))
         else:
@@ -25,9 +42,9 @@ def sex_chr_asn(sex_chr,chr_name):
 
 #MAIN ----
 
-outdir=sys.argv[1]
-hap_agp=outdir + "/hap.unlocs.no_hapdups.agp"
-hap_sort=outdir + "/hap.sorted.fa"
+outdir=args.output_dir
+hap_agp=args.agp
+hap_sort=args.fasta
 
 agp_lines=[]
 with open(hap_agp) as file:
@@ -98,8 +115,6 @@ with open(hap_sort) as original:
             record.id=(re.sub(orig_name,super_name,record.id))
 
         new_records.append(SeqRecord(record.seq,id=record.id, description=""))
-
-print (inter_chr_dict)
 
 
 with open((outdir+"/inter_chr.tsv"),'w') as file: 
