@@ -115,20 +115,29 @@ most_frequent_sign = counts.groupby(level=[0, 1]).idxmax().apply(lambda x: x[2])
 result = most_frequent_sign.to_frame(name='Main Orientation')
 
 result=result.reset_index()
+
+
 result['Hap_1'] = pd.Categorical(result['Hap_1'], categories=natsorted(result['Hap_1'].unique()), ordered=True)
 result = result.sort_values(by='Hap_1')
 
 result.to_csv(args.out_dir+"/orientation.tsv", index=True, header=True, sep="\t")
 
-to_reverse = pd.DataFrame(columns=['Command', 'Hap2_SUPER'])
-to_reverse['Hap2_SUPER']=result[result['Main Orientation']=='-']["Hap_2"]
+result['Hap_2'] = result['Hap_2'].astype(str) + "_oldname"
+
+to_reverse = pd.DataFrame(columns=['Command', 'Hap_2'])
+to_reverse['Hap_2']=result[result['Main Orientation']=='-']["Hap_2"]
 to_reverse['Command']="RVCP"
 
 
-to_reverse.to_csv(args.out_dir+"/rvcp.sak", index=False, header=False, sep="\t")
+#to_reverse.to_csv(args.out_dir+"/rvcp.sak", index=False, header=False, sep="\t")
 
 renaming=result[['Hap_1','Hap_2']]
 #renaming=renaming.rename(columns={'Hap_1':'New_name','Hap_2':'Old_name'})
-#renaming['action']="RENAME"
-renaming[['Hap_2','Hap_1']].to_csv(args.out_dir+"/hap2.vs.hap1.tsv", index=False, header=True, sep="\t")
+renaming['Command']="RENAME"
+#renaming[['Command','Hap_2','Hap_1']].to_csv(args.out_dir+"/hap2.vs.hap1.tsv", index=False, header=false, sep="\t")
 
+
+to_reverse['Hap_1']=''
+
+actions= pd.concat([to_reverse, renaming])
+actions[['Command','Hap_2','Hap_1']].to_csv(args.out_dir+"/reversing_renaming.sak", index=False, header=False, sep="\t")

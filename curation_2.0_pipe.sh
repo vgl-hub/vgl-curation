@@ -31,7 +31,8 @@ done
 if [ -d logs ]
 then
     count=`ls logs/* | wc -l`
-    exec 1<> logs/std.${count}.out
+    trimmed=$(echo "$count" | xargs)
+    exec 1<> logs/std.${trimmed}.out
 else 
     mkdir -p logs 
     exec 1<> logs/std.0.out
@@ -68,16 +69,16 @@ python3 $pth/unloc.py -a Hap_2/hap.agp -o Hap_2
 
 printf "Imposing the haplotypic agp on the original fasta to generate a curated fasta.\n"
 printf "gfastats $fasta --agp-to-path Hap_1/hap.unlocs.no_hapdups.agp --sort largest -o Hap_1/hap.sorted.fa\n"
-gfastats $fasta --agp-to-path Hap_1/hap.unlocs.no_hapdups.agp -o Hap_1/hap.unlocs.no_hapdups.fa 2>> logs/std.${count}.out 
+gfastats $fasta --agp-to-path Hap_1/hap.unlocs.no_hapdups.agp -o Hap_1/hap.unlocs.no_hapdups.fa 2>> logs/std.${trimmed}.out 
 
 printf "gfastats $fasta --agp-to-path Hap_1/hap.unlocs.no_hapdups.agp --sort largest -o Hap_2/hap.sorted.fa\n\n"
-gfastats $fasta --agp-to-path Hap_2/hap.unlocs.no_hapdups.agp -o Hap_2/hap.unlocs.no_hapdups.fa 2>> logs/std.${count}.out 
+gfastats $fasta --agp-to-path Hap_2/hap.unlocs.no_hapdups.agp -o Hap_2/hap.unlocs.no_hapdups.fa 2>> logs/std.${trimmed}.out 
 
 printf "gfastats Hap_1/hap.unloc.no_hapdups.fa --sort largest -o Hap_1/hap.sorted.fa"
-gfastats Hap_1/hap.unlocs.no_hapdups.fa --sort largest -o Hap_1/hap.sorted.fa 2>> logs/std.${count}.out
+gfastats Hap_1/hap.unlocs.no_hapdups.fa --sort largest -o Hap_1/hap.sorted.fa 2>> logs/std.${trimmed}.out
 
 printf "gfastats Hap_2/hap.unloc.no_hapdups.fa --sort largest -o Hap_2/hap.sorted.fa"
-gfastats Hap_2/hap.unlocs.no_hapdups.fa --sort largest -o Hap_2/hap.sorted.fa 2>> logs/std.${count}.out 
+gfastats Hap_2/hap.unlocs.no_hapdups.fa --sort largest -o Hap_2/hap.sorted.fa 2>> logs/std.${trimmed}.out 
 
 printf "\nSubstituting scaffold for chromosome assignments.\n"
 printf "python3 $pth/chromosome_assignment.py -a Hap_1/hap.unlocs.no_hapdups.agp -f Hap_1/hap1_sorted.fasta -o Hap_1 \n\n"
@@ -89,47 +90,25 @@ python3 $pth/chromosome_assignment.py -a Hap_2/hap.unlocs.no_hapdups.agp -f Hap_
 
 
 printf "mashmap -r Hap_1/hap.chr_level.fa  -q Hap_2/hap.chr_level.fa -f one-to-one -t 16 -s 50000 --pi 90 \n\n"
-mashmap -r Hap_1/hap.chr_level.fa  -q Hap_2/hap.chr_level.fa -f one-to-one -t 16 -s 50000 --pi 90  2>> logs/std.${count}.out 
+mashmap -r Hap_1/hap.chr_level.fa  -q Hap_2/hap.chr_level.fa -f one-to-one -t 16 -s 50000 --pi 90  2>> logs/std.${trimmed}.out 
 
 
 
 printf "Process Mashmap output for reorientation and renaming \n\n"
 
 
-### Block 1 : Use if AGP file has not been tagged with Micro1 and Micro2 tags
+printf "Give temporary names to hap2 scaffolds for easier renaming : awk '/^>/ {$1 = $1 "_oldname"} {print}' Hap_2/hap.chr_level.fa > Hap_2/tmpnamed.fa \n\n"
+awk '/^>/ {$1 = $1 "_oldname"} {print}' Hap_2/hap.chr_level.fa > Hap_2/tmpnamed.fa
 
-cut -f1 mashmap.out | grep -v SCAFFOLD | grep -v unloc | uniq > tmp
+printf "python3 $pth/filter_mashmap_with_tagged_pairs.py  -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -r Hap_1 -q Hap_2 -a corrected.agp -m mashmap.out -o tagged_pairs/ \n \n"
+python $pth/filter_mashmap_with_tagged_pairs.py  -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -r Hap_1 -q Hap_2 -a corrected.agp -m mashmap.out -o tagged_pairs/
 
-while read id; do
-  awk -v val="$id" '$1 == val' mashmap.out |
-  awk '{print $0 "\t" $9 - $8}' |
-  sort -nrk11 |
-  head -n1
-done < tmp | awk -F" " '/^SUPER_[0-9]+/ {print $1, $5, $6}' > orientation.tmp
+printf "gfastats Hap_2/tmpnamed.fa  -k tagged_pairs/reversing_renaming.sak  -o Hap_2/hap2.partially_renamed.fasta \n\n"
+gfastats Hap_2/tmpnamed.fa  -k tagged_pairs/reversing_renaming.sak  -o Hap_2/hap2.partially_renamed.fasta
 
-printf "Preparing reverse complement instructions..."
-awk -F" " -v OFS="\t" '$2=="-" {print "RVCP",$1}' orientation.tmp > rvcp.sak
+printf "remove temporary suffix : sed '/^>/ s/_oldname//' Hap_2/hap2.partially_renamed.fasta >  Hap_2/hap2.reoriented.renamed.fasta \n\n"
+sed '/^>/ s/_oldname//' Hap_2/hap2.partially_renamed.fasta >  Hap_2/hap2.reoriented.renamed.fasta
 
-printf "gfastats Hap_2/hap2_sorted.fasta  -k rvcp.sak  -o Hap_2/hap2.reoriented.fasta \n\n"
-gfastats Hap_2/hap2_sorted.fasta  -k rvcp.sak  -o Hap_2/hap2.reoriented.fasta
-awk '{print $1 "\t" $3}' orientation.tmp > hap2.vs.hap1.tsv
-
-printf "ruby $pth/update_mapping.rb -f Hap_2/hap2.reoriented.fasta -t hap2.vs.hap1.tsv >  Hap_2/hap2.reoriented.renamed.fasta \n\n"
-ruby $pth/update_mapping.rb -f Hap_2/hap2.reoriented.fasta -t hap2.vs.hap1.tsv >  Hap_2/hap2.reoriented.renamed.fasta
-
-
-### End Block 1
-
-### Block 2 : Use if AGP file has been tagged with Micro1 and Micro2 tags
-
-#printf "python3 $pth/filter_mashmap_with_tagged_pairs.py  -1 Hap\n\n"
-#python3 $pth/filter_mashmap_with_tagged_pairs.py  -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -r Hap_1 -q Hap_2 -a corrected.agp -m mashmap.out -o tagged_pairs/
-#printf "gfastats Hap_2/hap2_sorted.fasta  -k tagged_pairs/rvcp.sak  -o Hap_2/hap2.reoriented.fasta \n\n"
-#gfastats Hap_2/hap2_sorted.fasta  -k tagged_pairs/rvcp.sak  -o Hap_2/hap2.reoriented.fasta
-#printf "ruby $pth/update_mapping.rb -f Hap_2/hap2.reoriented.fasta -t tagged_pairs/hap2.vs.hap1.tsv >  Hap_2/hap2.reoriented.renamed.fasta \n\n"
-#ruby $pth/update_mapping.rb -f Hap_2/hap2.reoriented.fasta -t tagged_pairs/hap2.vs.hap1.tsv >  Hap_2/hap2.reoriented.renamed.fasta
-
-### End Block 2
 
 exec 1>&-
 
