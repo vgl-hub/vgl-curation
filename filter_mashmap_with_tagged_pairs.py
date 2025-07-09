@@ -40,13 +40,13 @@ if args.reference!="Hap_1" and args.reference!="Hap_2":
     raise ValueError("The reference parameter should be Hap_1 or Hap_2")
 
 try:
-    dico_supers_hap1= pd.read_csv(args.hap1, sep="\t", header=None)
-    dico_supers_hap2= pd.read_csv(args.hap2, sep="\t", header=None)
+    dico_supers_hap1= pd.read_csv(args.hap1, sep=r'\s+', header=None)
+    dico_supers_hap2= pd.read_csv(args.hap2, sep=r'\s+', header=None)
 except FileNotFoundError:
     print(f"Error: The file inter_chr.tsv was not found.")
 
 try:
-    mashmap_out=pd.read_csv(args.mashmap, sep="\t", header=None)
+    mashmap_out=pd.read_csv(args.mashmap, sep=r'\s+', header=None)
 except FileNotFoundError:
     print(f"Error: The file '{args.mashmap}' was not found.")
 
@@ -63,7 +63,7 @@ try:
 except FileNotFoundError:
     print(f"Error: The file '{file_name}' was not found.")
 
-filtered_agp = pd.read_csv(StringIO(output_agp),sep='\t',header=None)
+filtered_agp = pd.read_csv(StringIO(output_agp),sep=r'\s+',header=None)
 
 dico_micro=pd.DataFrame(columns=['Hap_1', 'Hap_2'])
 
