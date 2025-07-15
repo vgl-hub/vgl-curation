@@ -52,13 +52,12 @@ if maxlen < 11:
         writer.writerows(agp_lines)
     f.close() 
     exit()
+    
+    
+agp_df=pd.DataFrame(agp_lines)
 
-elif maxlen == 11:
-    agp_df=pd.DataFrame(agp_lines,columns=['chr','chr_start','chr_end','#_scaffs','W','scaff','scaff_start','scaff_end','ori','painted','tag'])
-elif maxlen == 14:
-    agp_df=pd.DataFrame(agp_lines,columns=['chr','chr_start','chr_end','#_scaffs','W','scaff','scaff_start','scaff_end','ori','painted','tag','tag2','blank', 'blank'])
-else:
-    agp_df=pd.DataFrame(agp_lines,columns=['chr','chr_start','chr_end','#_scaffs','W','scaff','scaff_start','scaff_end','ori','painted','tag','blank'])
+agp_df=agp_df.rename(columns={0:'chr',1:'chr_start', 2:'chr_end', 3:'#_scaffs', 4:'W', 5:'scaff', 6:'scaff_start', 7:'scaff_end', 8:'ori', 9:'painted', 10:'tag'})
+
 
 
 unlocs=(agp_df.index[agp_df['tag']=='Unloc']).to_list()
