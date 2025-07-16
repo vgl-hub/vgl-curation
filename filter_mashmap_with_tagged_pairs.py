@@ -4,6 +4,7 @@ from io import StringIO
 from natsort import natsorted
 import textwrap
 import os
+import re
 
 parser = argparse.ArgumentParser(
                     prog='filter_mashmap_with_tagged_pairs',
@@ -59,11 +60,15 @@ try:
     with open(file_agp, 'r') as file:
         for line in file:
             if filter_word in line:
+                tmp_line_split=line.split(r'\s+')
+                line=re.sub(r"Painted\s+([M])",r"Painted\tNA\tM",line)
+                line=re.sub(r"Painted\s+([^HN])",r"Painted_\1",line)
                 output_agp=output_agp+line
 except FileNotFoundError:
     print(f"Error: The file '{file_name}' was not found.")
 
-filtered_agp = pd.read_csv(StringIO(output_agp),sep=r'\s+',header=None)
+filtered_agp = pd.read_table(StringIO(output_agp),sep=r'\s+',header=None)
+
 
 dico_micro=pd.DataFrame(columns=['Hap_1', 'Hap_2'])
 
@@ -73,11 +78,17 @@ even_hap=None
 for index, row in filtered_agp.iterrows():  
     if index % 2 == 0:
         even_value=row.iloc[0] 
-        even_hap=row.iloc[10]
+        #even_hap=row.iloc[10]
+        if "1" in row.iloc[11]:
+            even_hap="Hap_1"
+            odd_hap="Hap_2"
+        elif "2" in row.iloc[11]:
+            even_hap="Hap_2"
+            odd_hap="Hap_1"
     else:
         index_new=len(dico_micro)
         tmp=pd.DataFrame(columns=['Hap_1', 'Hap_2'])
-        tmp.loc[0,row.iloc[10]]=row.iloc[0]
+        tmp.loc[0,odd_hap]=row.iloc[0]
         tmp.loc[0,even_hap]=even_value
         dico_micro.loc[len(dico_micro)] = tmp.loc[0]
 
