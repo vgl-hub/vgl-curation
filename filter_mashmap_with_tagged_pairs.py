@@ -8,8 +8,8 @@ import re
 
 parser = argparse.ArgumentParser(
                     prog='filter_mashmap_with_tagged_pairs',
-                    description='Filter Mashmap output to keep only Scaffolds paired with the tags Micro1 and Micro2',
-                    usage='filter_mashmap_with_tagged_pairs.py -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -q Hap_2 -r Hap_1 -agp curated_agp_with_micro_tags.agp -m mashmap.out -o results/',
+                    description='Filter Mashmap output to keep only Scaffolds paired with the tags Hap_1 and Hap_2',
+                    usage='filter_mashmap_with_tagged_pairs.py -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -q Hap_2 -r Hap_1 -agp curated_agp_with_micro_tags.agp -m mashmap.out -s Z -o results/ ',
                     formatter_class=argparse.RawTextHelpFormatter,
                     epilog=textwrap.dedent('''
                                            Outputs: 
@@ -22,10 +22,10 @@ parser.add_argument('-1', '--hap1', dest="hap1",required=True, help='Path to the
 parser.add_argument('-2', '--hap2', dest="hap2", required=True, help='Path to the chromosome assignment file for Haplotype 2 (inter_chr.tsv) ') 
 parser.add_argument('-q', '--query', dest="query", default="Hap_2", help='Haplotype use as Query for MashMap: Hap_1 or Hap_2 (Default Hap_2)')  
 parser.add_argument('-r', '--reference', dest="reference", default="Hap_1", help='Haplotype use as reference for MashMap: Hap_1 or Hap_2 (Default Hap_1)')  
-parser.add_argument('-a', '--agp', dest="agp", required=True, help='Path to the curated AGP file (containing the tags Micro1 and Micro2)')       
+parser.add_argument('-a', '--agp', dest="agp", required=True, help='Path to the curated AGP file (with the tags Hap_1 and Hap_2)')       
 parser.add_argument('-m', '--mashmap', dest="mashmap", required=True, help='Path to the curated Mashmap output')  
 parser.add_argument('-o', '--out_dir', dest="out_dir", required=True, help='Path to output Prefix')  
-
+parser.add_argument('-s', '--sexchr', dest="sexchr", required=True, help='Letter marking the sexual chromosome only present in heterogametic individuals (e.g Y in humans, Z in birds)')  
 args = parser.parse_args()
 
 
@@ -51,10 +51,12 @@ try:
 except FileNotFoundError:
     print(f"Error: The file '{args.mashmap}' was not found.")
 
-mashmap_out=mashmap_out.rename(columns={0:args.query, 1:'Query length',2:'Query 0-based start',3:'Query 0-based end',4:'Strand',5:args.reference, 6:'Target length', 7:'Target 0-based start', 8:'Target 0-based end',12:'Mapping nucleotide identity'})
+mashmap_out=mashmap_out.rename(columns={0:args.query, 1:'Query length',2:'Query 0-based start',3:'Query 0-based end',4:'Orientation',5:args.reference, 6:'Target length', 7:'Target 0-based start', 8:'Target 0-based end',12:'Mapping nucleotide identity'})
+
+filtered_mashmap=pd.DataFrame(columns=mashmap_out.columns)
 
 file_agp = args.agp
-filter_word = "Micro"
+filter_word = "Hap_"
 output_agp=""
 try:
     with open(file_agp, 'r') as file:
@@ -68,7 +70,8 @@ except FileNotFoundError:
     print(f"Error: The file '{file_name}' was not found.")
 
 filtered_agp = pd.read_table(StringIO(output_agp),sep=r'\s+',header=None)
-
+if len(filtered_agp[filtered_agp[9]=="Painted_"+args.sexchr])!=0:
+    filtered_agp=filtered_agp[~filtered_agp[9].str.contains('Painted_')]
 
 dico_micro=pd.DataFrame(columns=['Hap_1', 'Hap_2'])
 
@@ -78,17 +81,11 @@ even_hap=None
 for index, row in filtered_agp.iterrows():  
     if index % 2 == 0:
         even_value=row.iloc[0] 
-        #even_hap=row.iloc[10]
-        if "1" in row.iloc[11]:
-            even_hap="Hap_1"
-            odd_hap="Hap_2"
-        elif "2" in row.iloc[11]:
-            even_hap="Hap_2"
-            odd_hap="Hap_1"
+        even_hap=row.iloc[10]
     else:
         index_new=len(dico_micro)
         tmp=pd.DataFrame(columns=['Hap_1', 'Hap_2'])
-        tmp.loc[0,odd_hap]=row.iloc[0]
+        tmp.loc[0,row.iloc[10]]=row.iloc[0]
         tmp.loc[0,even_hap]=even_value
         dico_micro.loc[len(dico_micro)] = tmp.loc[0]
 
@@ -108,16 +105,15 @@ try:
 except Exception as e:
     print(f"An error occurred: {e}")
 
-filtered_mashmap=pd.DataFrame(columns=mashmap_out.columns)
 
 for index, row in mashmap_out.iterrows():
     if  ((Paired['Hap_1'] == row[[args.query,args.reference]].iloc[1]) & (Paired["Hap_2"] == row[[args.query,args.reference]].iloc[0])).any():
         filtered_mashmap.loc[len(filtered_mashmap)] = row
 
-orientations = filtered_mashmap[[args.query,"Strand",args.reference]]
+orientations = filtered_mashmap[["Hap_1","Hap_2","Orientation"]]
 
 # Group by Reference and Query, then count Sign occurrences
-counts = orientations.groupby(["Hap_1","Hap_2"])["Strand"].value_counts()
+counts = orientations.groupby(["Hap_1","Hap_2"])["Orientation"].value_counts()
 
 # Get the sign with the highest count per group
 most_frequent_sign = counts.groupby(level=[0, 1]).idxmax().apply(lambda x: x[2])  # x is a tuple (Reference, query, sign)
