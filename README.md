@@ -29,19 +29,19 @@ Curation:
 
 4. Curate both haplotypes simultaneously. The presence of both haplotypes can be especially useful for identifying sex and microchromosomes, as well as haplotig duplications (mis-phased sequences).
 5. Tags: <br>
-    * Create "Hap_1" and "Hap_2" tags in PretextView. These tags only need to be created once, PretextView will remember them in other curations. In the PretextView menu, click "Meta Data Tags" and type in the two tags as such: <br>
+    * Create `Hap_1` and `Hap_2` tags in PretextView. These tags only need to be created once, PretextView will remember them in other curations. In the PretextView menu, click "Meta Data Tags" and type in the two tags as such: <br>
        <p align="center">
          <img width="400" alt="image" src="https://github.com/Nadolina/Rapid-curation-2.0/assets/73204272/ad08e8fa-9674-4f92-9699-8e1fc63ea48f"\>
          <img width="400" alt="image" src="https://github.com/Nadolina/Rapid-curation-2.0/assets/73204272/1d5e1812-b3d8-4c08-acf7-02a337f87cbd">
        </p>
        <br>
-    * Teasing the haplotypes apart gets a little messy, especially if there are sequences moved between haplotypes (i.e./ a scaffold from Hap_1 assigned to a Hap_2 scaffold or vice versa). The unassigned scaffolds can be sorted by the H1 and H2 notations we added prior to mapping. However, we need to use the Hap_1 and Hap_2 tags we just created to sort the chromosomes. For each chromosome, assign the appropriate haplotype tag to the left most scaffold, as such: <br>
+    * Teasing the haplotypes apart gets a little messy, especially if there are sequences moved between haplotypes (i.e./ a scaffold from Hap_1 assigned to a Hap_2 scaffold or vice versa). The unassigned scaffolds can be sorted by the H1 and H2 notations we added prior to mapping. However, we need to use the `Hap_1` and `Hap_2` tags we just created to sort the chromosomes. For each chromosome, assign the appropriate haplotype tag to the left most scaffold, as such: <br>
        <p align="center">
         <img width="400" height="300" alt="image" src="https://github.com/Nadolina/Rapid-curation-2.0/assets/73204272/1e2c4a3a-2b2c-4d74-8b8a-ae80228e90bc">
         <img width="400" height="300" alt="image" src="https://github.com/Nadolina/Rapid-curation-2.0/assets/73204272/a1531c9a-4159-41fd-8d48-9e78c7fa39d3">
        </p>
        <br>
-    * Tag the sex chromosomes as per usual. The current VGP standard is to move the sex chromosomes into Hap_1, so make sure that any sex chromosomes are also tagged with the Hap_1 tag. <br>
+    * Tag the sex chromosomes as per usual. The current VGP standard is to have a representant of each chromosome in Hap_1. So if the genome is heterogametic (XY or ZW), make sure that any sex chromosomes is tagged with `Hap_1`. For homogametic genomes (XX or ZZ), leave one sexual chromosome in each haplotype (tags `Hap_1` and `Hap_2`) <br>
     * Tag any unlocalized sequences as "unloc". Place any unloc sequences at the end (right most side) of their chromosomal assignment. These unlocs need to be painted with the chromosome they belong too. <br> 
 6. Once done, paint all the scaffolds (from both haplotypes) into chromosomes. The homologs will need to alternate for proper identification. With everything painted, generate your AGP. <br>
    
@@ -53,13 +53,13 @@ sh curation_2.0_pipe.sh -f <haplotype combined fasta> -a <PretextView generated 
 -h help
 -f combined haplotype fasta
 -a haplotype agp generated from pretextview
--s Sexual Chromosome marking the heterogametic individuals (e.g. 'Y' for humans, 'W' for birds)
+-s Sexual Chromosome marking the heterogametic individuals (e.g. 'Y' for humans, 'Z' for birds)
 
 Example:
 sh curation_2.0_pipe.sh -f rCycPin1.HiC.haps_combined.fasta -a rCycPin1.HiC.haps_combined.pretext.agp -Z
 ```
 
-8. The `curation_2.0_pipe.sh` now include running a mashmap between your hap1 and hap2 fasta files to identify any homologous pairs that aren't named the same and the orientation of the sequence in Hap_2 relative to Hap_1. The output from this is a mashmap.out file and a sak file (tabular). The sak contains instructions for gfastats to reverse the sequences that need to be, and rename of hap2 chromosomes according to their homolog in hap1. Gfastats is then run on Hap_2 using this sak instruction file. This will modify the names and output a new fasta. ***These two scripts were authored and kindly shared by Michael Paulini of the GRIT team at the Wellcome Sanger Institute. They are copied here for ease of access as they make substantially easier the process of renaming hap2 chromosomomes.*** 
+8. The `curation_2.0_pipe.sh` now include running a mashmap between your hap1 and hap2 fasta files to identify any homologous pairs that aren't named the same and the orientation of the sequence in Hap_2 relative to Hap_1. The output from this is a mashmap.out file and a sak file (tabular). The sak contains instructions for gfastats to reverse the sequences that need to be, and rename of hap2 chromosomes according to their homolog in hap1. Gfastats is then run on Hap_2 using this sak instruction file. This will modify the names and output a new fasta.
 10. (Suggested) Generate a pretext map for each haplotype to ensure it curated as anctipated.
 11. Use chr_submission.py to generate the chr.tsv file that is necessary for NCBI submissions. 
 12. SUCCESS!
