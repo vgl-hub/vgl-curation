@@ -16,7 +16,6 @@ parser = argparse.ArgumentParser(
                                            Outputs: 
                                            - {output_dir}/hap.unlocs.no_hapdups.agp: Processed AGP file
                                            - {output_dir}/haplotigs.agp: AGP file containing the haplotig duplications
-                                           - {output_dir}/unloc.log: Log of removed gap lines
                                            '''))
 parser.add_argument('-a', '--agp', required=True, help='Path to the haplotype AGP file')
 parser.add_argument('-o', '--output_dir', required=True, help='Output directory')  
@@ -100,14 +99,12 @@ while line_num < num_lines:
     line_num+=1
 
 
-with open (outdir+'/unloc.log','w',newline='\n') as fl:
-    final_list=[]
-    for line in agp_list:
-        if line in prox_lig_lines:
-            fl.write("Gap line removed: "+ "\t".join(str(n) for n in line)+"\n")
-        else:
-            final_list.append(line)
-fl.close()
+final_list=[]
+for line in agp_list:
+    if line in prox_lig_lines:
+        print("Gap line removed: "+ "\t".join(str(n) for n in line)+"\n")
+    else:
+        final_list.append(line)
 
 haplotigs_list=[agp_df.iloc[ind].tolist() for ind in haplotigs]
 

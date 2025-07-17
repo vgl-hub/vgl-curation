@@ -45,6 +45,7 @@ if [ -d logs ]
 then
     count=`ls logs/* | wc -l`
     trimmed=$(echo "$count" | xargs)
+    trimmed=$((trimmed/4))
     exec 1<> logs/std.${trimmed}.out
 else 
     mkdir -p logs 
@@ -58,52 +59,55 @@ printf "Rapid-curation-2.0 scripts located in: $pth\n"
 ## Programs/tools
 # use_gfastats=/vggpfs/fs3/vgl/store/nbrajuka/gfastats/build/bin/gfastats
 # use_seqkit=/vggpfs/fs3/vgl/store/nbrajuka/conda/envs/statistics/bin/seqkit
-printf "Dependecies:\nBiopython\npandas\ngfastats\nmashmap\nnatsort" 
+printf "Dependencies:\nBiopython\npandas\ngfastats\nmashmap\nnatsort" 
 
 # could reasonably put everything in a function and just call for both haps. 
-
+echo "Creation Log File" >> logs/std.agp_to_path_hap1.${trimmed}.out 
+echo "Creation Log/Error File for Hap_2 reconciliation" >> logs/std.agp_to_path_hap2.${trimmed}.out 
+echo "Creation Log/Error File for Hap_1 reconciliation" >> logs/std.agp_to_path_hap1.${trimmed}.out 
+echo "Creation Log/Error File for Mashmap" >> logs/std.mashmap.${trimmed}.out  
 
 printf "\n\nOriginal assembly: ${fasta} \nPretextView generated AGP: ${agpfile}\n\n" ### but checks/breakpoints for if these aren't provided.
 
-printf "Running AGPcorrect on the PretextView generated agp to correct for sequence lengths.\n\n" 
-printf "python3 ${pth}/AGPcorrect.py ${fasta} ${agpfile}\n\n"
+printf "Running AGPcorrect on the PretextView generated agp to correct for sequence lengths.\n" 
+printf " - python3 ${pth}/AGPcorrect.py ${fasta} ${agpfile}\n\n"
 
 python3 $pth/AGPcorrect.py ${fasta} ${agpfile} > corrected.agp 
 
 printf "\n\nSplitting the haplotypes from the corrected AGP. Outputs sent to respective directories.\n"
-printf "python3 $pth/hap_split.py -1 Hap_1/hap.agp -2 Hap_2/hap.agp -a corrected.agp\n\n"
+printf " - python3 $pth/hap_split.py -1 Hap_1/hap.agp -2 Hap_2/hap.agp -a corrected.agp\n\n"
 python3 $pth/hap_split.py  -1 Hap_1/hap.agp -2 Hap_2/hap.agp -a corrected.agp   
 
-printf "\n\nAssigning unlocs before the agp is imposed on the fasta.\n\n"
+printf "\n\nAssigning unlocs before the agp is imposed on the fasta.\n"
 ## If the --agp-to-path in the next block is run first the unlocs will get assimilated into their main assigned scaffolds - they need to be differentiated first.
-printf "python3 $pth/unloc.py -a Hap_1/hap.agp -o Hap_1 \n\n" 
-python3 $pth/unloc.py -a Hap_1/hap.agp -o Hap_1 
-printf "\n\npython3 $pth/unloc.py -a Hap_2/hap.agp -o Hap_2 \n\n"
+printf " - python3 $pth/unloc.py -a Hap_1/hap.agp -o Hap_1 \n\n" 
+python3 $pth/unloc.py -a Hap_1/hap.agp -o Hap_1  
+printf "\n\n - python3 $pth/unloc.py -a Hap_2/hap.agp -o Hap_2 \n\n"
 python3 $pth/unloc.py -a Hap_2/hap.agp -o Hap_2 
 
-printf "\n\nImposing the haplotypic agp on the original fasta to generate a curated fasta.\n"
-printf "gfastats $fasta --agp-to-path Hap_1/hap.unlocs.no_hapdups.agp --sort largest -o Hap_1/hap.sorted.fa\n"
+printf "\n\nImposing the haplotypic agp on the original fasta to generate a curated fasta.(See logs)\n\n"
+printf " - gfastats $fasta --agp-to-path Hap_1/hap.unlocs.no_hapdups.agp -o Hap_1/hap.unlocs.no_hapdups.fa \n"
 gfastats $fasta --agp-to-path Hap_1/hap.unlocs.no_hapdups.agp -o Hap_1/hap.unlocs.no_hapdups.fa  2>> logs/std.agp_to_path_hap1.${trimmed}.out 
 
-printf "\n\ngfastats $fasta --agp-to-path Hap_1/hap.unlocs.no_hapdups.agp --sort largest -o Hap_2/hap.sorted.fa\n\n"
+printf "\n\n - gfastats $fasta --agp-to-path Hap_1/hap.unlocs.no_hapdups.agp --sort largest -o Hap_2/hap.sorted.fa\n"
 gfastats $fasta --agp-to-path Hap_2/hap.unlocs.no_hapdups.agp -o Hap_2/hap.unlocs.no_hapdups.fa  2>> logs/std.agp_to_path_hap2.${trimmed}.out 
 
-printf "\n\ngfastats Hap_1/hap.unloc.no_hapdups.fa --sort largest -o Hap_1/hap.sorted.fa"
+printf "Sort fastas by descending sequence length\n\n"
+printf " - gfastats Hap_1/hap.unloc.no_hapdups.fa --sort largest -o Hap_1/hap.sorted.fa\n"
 gfastats Hap_1/hap.unlocs.no_hapdups.fa --sort largest -o Hap_1/hap.sorted.fa 
 
-printf "\n\ngfastats Hap_2/hap.unloc.no_hapdups.fa --sort largest -o Hap_2/hap.sorted.fa"
+printf "\n\n - gfastats Hap_2/hap.unloc.no_hapdups.fa --sort largest -o Hap_2/hap.sorted.fa\n"
 gfastats Hap_2/hap.unlocs.no_hapdups.fa --sort largest -o Hap_2/hap.sorted.fa 
 
-printf "\n\nSubstituting scaffold for chromosome assignments.\n"
-printf "python3 $pth/chromosome_assignment.py -a Hap_1/hap.unlocs.no_hapdups.agp -f Hap_1/hap1_sorted.fasta -o Hap_1 \n\n"
+printf "\n\nSubstituting scaffold for chromosome assignments.\n\n"
+printf " - python3 $pth/chromosome_assignment.py -a Hap_1/hap.unlocs.no_hapdups.agp -f Hap_1/hap1_sorted.fasta -o Hap_1\n"
 python3 $pth/chromosome_assignment.py -a Hap_1/hap.unlocs.no_hapdups.agp -f Hap_1/hap.sorted.fa -o Hap_1 
 
-printf "\n\npython3 $pth/chromosome_assignment.py -a Hap_2/hap.unlocs.no_hapdups.agp -f Hap_2/hap2_sorted.fasta -o Hap_2\n\n"
+printf " - python3 $pth/chromosome_assignment.py -a Hap_2/hap.unlocs.no_hapdups.agp -f Hap_2/hap2_sorted.fasta -o Hap_2\n"
 python3 $pth/chromosome_assignment.py -a Hap_2/hap.unlocs.no_hapdups.agp -f Hap_2/hap.sorted.fa -o Hap_2 
 
-
-
-printf "\n\nmashmap -r Hap_1/hap.chr_level.fa  -q Hap_2/hap.chr_level.fa -f one-to-one -t 16 -s 50000 --pi 90 -o mashmap_original_fastas.out \n\n"
+printf "\n\nRun Mashmap(See logs)\n\n"
+printf "\n\n - mashmap -r Hap_1/hap.chr_level.fa  -q Hap_2/hap.chr_level.fa -f one-to-one -t 16 -s 50000 --pi 90 -o mashmap_original_fastas.out \n"
 mashmap -r Hap_1/hap.chr_level.fa  -q Hap_2/hap.chr_level.fa -f one-to-one -t 16 -s 50000 --pi 90 -o mashmap_original_fastas.out  2>> logs/std.mashmap.${trimmed}.out  
 
 printf "\n\nProcess Mashmap output for reorientation and renaming \n\n"
@@ -111,14 +115,15 @@ printf "\n\nProcess Mashmap output for reorientation and renaming \n\n"
 printf "Give temporary names to hap2 scaffolds for easier renaming : awk '/^>/ {$1 = $1 "_oldname"} {print}' Hap_2/hap.chr_level.fa > Hap_2/tmpnamed.fa \n\n"
 awk '/^>/ {$1 = $1 "_oldname"} {print}' Hap_2/hap.chr_level.fa > Hap_2/tmpnamed.fa 
 
-printf "\n\npython3 $pth/filter_mashmap_with_tagged_pairs.py  -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -r Hap_1 -q Hap_2 -a corrected.agp -m mashmap_original_fastas.out -s ${sexchr}  -o tagged_pairs/ \n \n"
+printf " - python3 $pth/filter_mashmap_with_tagged_pairs.py  -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -r Hap_1 -q Hap_2 -a corrected.agp -m mashmap_original_fastas.out -s ${sexchr}  -o tagged_pairs/ \n \n"
 python $pth/filter_mashmap_with_tagged_pairs.py  -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -r Hap_1 -q Hap_2 -a corrected.agp -m  mashmap_original_fastas.out -s ${sexchr} -o tagged_pairs/ 
     
+printf "\n\nReverse and rename Hap_2 sequences\n\n"
 
-printf "\n\ngfastats Hap_2/tmpnamed.fa  -k tagged_pairs/reversing_renaming.sak  -o Hap_2/hap2.partially_renamed.fasta \n\n"
+printf " - gfastats Hap_2/tmpnamed.fa  -k tagged_pairs/reversing_renaming.sak  -o Hap_2/hap2.partially_renamed.fasta \n\n"
 gfastats Hap_2/tmpnamed.fa  -k tagged_pairs/reversing_renaming.sak  -o Hap_2/hap2.partially_renamed.fasta 
 
-printf "\n\nremove temporary suffix : sed '/^>/ s/_oldname//' Hap_2/hap2.partially_renamed.fasta >  Hap_2/hap2.reoriented.renamed.fasta \n\n"
+printf " - remove temporary suffix : sed '/^>/ s/_oldname//' Hap_2/hap2.partially_renamed.fasta >  Hap_2/hap2.reoriented.renamed.fasta \n\n"
 sed '/^>/ s/_oldname//' Hap_2/hap2.partially_renamed.fasta >  Hap_2/hap2.reoriented.renamed.fasta 
 
 printf "\n\nSuccessful!\n\n"
