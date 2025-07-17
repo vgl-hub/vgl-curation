@@ -12,6 +12,11 @@ gfastats v1.2.6
 
 pandas 
 
+mashmap
+
+natsort
+
+
 ## Getting started 
 
 Before curating: 
@@ -37,7 +42,8 @@ Curation:
        </p>
        <br>
     * Tag the sex chromosomes as per usual. The current VGP standard is to move the sex chromosomes into Hap_1, so make sure that any sex chromosomes are also tagged with the Hap_1 tag. <br>
-    *  Tag any unlocalized sequences as "unloc". Place any unloc sequences at the end (right most side) of their chromosomal assignment. These unlocs need to be painted with the chromosome they belong too. <br> 
+    * Tag any unlocalized sequences as "unloc". Place any unloc sequences at the end (right most side) of their chromosomal assignment. These unlocs need to be painted with the chromosome they belong too. <br> 
+    * Use the tags `Micro_1` and `Micro_2` to mark matching pairs in Hap_1 and Hap_2 respectively if you want to use your own pairing instead of the automatic Mashmap pairing.  <br> 
 6. Once done, paint all the scaffolds (from both haplotypes) into chromosomes. The homologs will approximately alternate. With everything painted, generate your AGP. <br>
    
 Post-curation:
@@ -53,7 +59,7 @@ Example:
 sh curation_2.0_pipe.sh -f rCycPin1.HiC.haps_combined.fasta -a rCycPin1.HiC.haps_combined.pretext.agp
 ```
 
-8. Run hap2_hap1_ID_mapping.sh; this will run a mashmap between your hap1 and hap2 fasta files to identify any homologous pairs that aren't named the same. The output from this is a .out mashamp file and a tsv. The tsv contains the current names of hap2 chromosomes, and the names of their homolog in hap1; this is parsed from the .out file. The parsing can sometimes get confused by repetitive/similar/small/etc chromosomes, so I recommend plotting your mashmap or visualizing it in Jbrowse to ensure the pairs in the tsv are correct.  Then, to generate a hap2 fasta with updated names, you can pass the hap2 fasta and the tsv output to update_mapping.rb. This will modify the names and output a new fasta. ***These two scripts were authored and kindly shared by Michael Paulini of the GRIT team at the Wellcome Sanger Institute. They are copied here for ease of access as they make substantially easier the process of renaming hap2 chromosomomes.*** 
+8. The `curation_2.0_pipe.sh` now include running a mashmap between your hap1 and hap2 fasta files to identify any homologous pairs that aren't named the same and the orientation of the sequence in Hap_2 relative to Hap_1. The output from this is a mashmap.out file and a sak file (tabular). The sak contains instructions for gfastats to reverse the sequences that need to be, and rename of hap2 chromosomes according to their homolog in hap1 (The homologs are determined by the `Micro_1` and `Micro_2` tags if available or is parsed from the mashmap output file). When determined by parsing the mashmap output, it can sometimes get confused by repetitive/similar/small/etc chromosomes, so I recommend plotting your mashmap or visualizing it in Jbrowse to ensure the pairs in the sak are correct. Gfastats is then run on Hap_2 using this sak instruction file. This will modify the names and output a new fasta. ***These two scripts were authored and kindly shared by Michael Paulini of the GRIT team at the Wellcome Sanger Institute. They are copied here for ease of access as they make substantially easier the process of renaming hap2 chromosomomes.*** 
 10. (Suggested) Generate a pretext map for each haplotype to ensure it curated as anctipated.
 11. Use chr_submission.py to generate the chr.tsv file that is necessary for NCBI submissions. 
 12. SUCCESS!
