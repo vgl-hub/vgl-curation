@@ -22,7 +22,6 @@ def Open(file_name):
     return gzip.open(file_name, "rt") if isgzip else open(file_name, "r")
 
 
-print("Reading fasta...", file=sys.stderr)
 with Open(sys.argv[1]) as f:
     seqs = {seq.id: len(seq) for seq in SeqIO.parse(f, "fasta")} ## Generating a list of all sequences and their lengths from the fasta
     ## All expected sequences are present. 
