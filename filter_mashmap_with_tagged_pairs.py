@@ -9,7 +9,7 @@ import re
 parser = argparse.ArgumentParser(
                     prog='filter_mashmap_with_tagged_pairs',
                     description='Filter Mashmap output to keep only Scaffolds paired with the tags Hap_1 and Hap_2',
-                    usage='filter_mashmap_with_tagged_pairs.py -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -q Hap_2 -r Hap_1 -agp curated_agp_with_micro_tags.agp -m mashmap.out -s Z -o results/ ',
+                    usage='filter_mashmap_with_tagged_pairs.py -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -q Hap_2 -r Hap_1 -agp curated_agp_with_micro_tags.agp -m mashmap.out -s W -o results/ ',
                     formatter_class=argparse.RawTextHelpFormatter,
                     epilog=textwrap.dedent('''
                                            Outputs: 
@@ -25,7 +25,7 @@ parser.add_argument('-r', '--reference', dest="reference", default="Hap_1", help
 parser.add_argument('-a', '--agp', dest="agp", required=True, help='Path to the curated AGP file (with the tags Hap_1 and Hap_2)')       
 parser.add_argument('-m', '--mashmap', dest="mashmap", required=True, help='Path to the curated Mashmap output')  
 parser.add_argument('-o', '--out_dir', dest="out_dir", required=True, help='Path to output Prefix')  
-parser.add_argument('-s', '--sexchr', dest="sexchr", required=True, help='Letter marking the sexual chromosome only present in heterogametic individuals (e.g Y in humans, Z in birds)')  
+parser.add_argument('-s', '--sexchr', dest="sexchr", required=True, help='Letter marking the sexual chromosome only present in heterogametic individuals (e.g Y in humans, W in birds)')  
 args = parser.parse_args()
 
 

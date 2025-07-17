@@ -43,7 +43,7 @@ Curation:
        <br>
     * Tag the sex chromosomes as per usual. The current VGP standard is to move the sex chromosomes into Hap_1, so make sure that any sex chromosomes are also tagged with the Hap_1 tag. <br>
     * Tag any unlocalized sequences as "unloc". Place any unloc sequences at the end (right most side) of their chromosomal assignment. These unlocs need to be painted with the chromosome they belong too. <br> 
-6. Once done, paint all the scaffolds (from both haplotypes) into chromosomes. The homologs will approximately alternate. With everything painted, generate your AGP. <br>
+6. Once done, paint all the scaffolds (from both haplotypes) into chromosomes. The homologs will need to alternate for proper identification. With everything painted, generate your AGP. <br>
    
 Post-curation:
 
@@ -53,7 +53,7 @@ sh curation_2.0_pipe.sh -f <haplotype combined fasta> -a <PretextView generated 
 -h help
 -f combined haplotype fasta
 -a haplotype agp generated from pretextview
--s Sexual Chromosome marking the heterogametic individuals (e.g. 'Y' for humans, 'Z' for birds)
+-s Sexual Chromosome marking the heterogametic individuals (e.g. 'Y' for humans, 'W' for birds)
 
 Example:
 sh curation_2.0_pipe.sh -f rCycPin1.HiC.haps_combined.fasta -a rCycPin1.HiC.haps_combined.pretext.agp -Z
