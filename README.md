@@ -66,8 +66,27 @@ sh curation_2.0_pipe.sh -f rCycPin1.HiC.haps_combined.fasta -a rCycPin1.HiC.haps
   
 ## Outputs 
 
-ADD THIS 
-  
+- `corrected.agp`: Corrected agp
+- `Hap_[12]/hap.agp`: Split agp for each haplotype
+- `Hap_[12]/hap.unlocs.no_hapdups.agp`: Processed AGP file
+- `Hap_[12]/haplotigs.agp`: AGP file containing the haplotig duplications
+- `Hap_[12]/hap.unlocs.no_hapdups.fa`: Reconciliated fasta
+- `Hap_[12]/hap.sorted.fa`: Reconciliated fasta sorted by descending sizes
+- `Hap_[12]/inter_chr.tsv`:  Table mapping the scaffolds to their chromosomal assignment.
+- `Hap_[12]/hap.chr_level.fa`:  Fasta file with chromosomal level sequences.
+- `mashmap_original_fastas.out`: Mashmap of the fasta files with chromosomal level sequences of each haplotype. 
+- `tagged_pairs/orientation.tsv`: Table containing the orientation of the sequences in Hap_2 compared to their homolog in Hap1
+- `tagged_pairs/reversing_renaming.sak`: Instruction file for reverting and renaming the sequences in Hap_2 to match their homolog in Hap_1
+- `Hap_2/hap2.reoriented.renamed.fasta`: Renamed and reoriented fasta file for Hap_2
+
+## Debugging
+
+Most errors should appear in the standard output of the curation_2.0_pipe.sh script, except for the mashmap and the fasta reconciliation steps. 
+If you are unsure of the origin of the error, check the logs: 
+- `std.{run}.out`: Standard output of the run 
+- `logs/std.agp_to_path_hap[12].{run}.out`: Standard output of the fasta reconciliations for the run 
+- `logs/std.mashmap.{run}.out`: Standard output of mashmap for the run 
+
 ## Wishlist/operations to include 
 
 - [x] Generating the chromosome file that is necessary for NCBI submissions. Will need to be able to double check for unloc pieces. 
