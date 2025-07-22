@@ -13,31 +13,60 @@ Help()
     printf "\n"
 }
 
+
 fasta=""
 agpfile=""
 hap=""
+sexchr=""
+agp_flag=false
+fasta_flag=false
+s_flag=false
 
-while getopts ":hf:a:s:" option; do
+
+while getopts "hf:a:s:" option; do
     case $option in 
         h) #display Help
             Help
             exit;;
         f) #Pass original fasta file 
-            fasta=$OPTARG;;
+            fasta=$OPTARG; fasta_flag=true;;
         a) #Pass Pretext generated AGP file of curated assembly
-            agpfile=$OPTARG;;
+            agpfile=$OPTARG; agp_flag=true;;
         s) #Pass the option of parsing the mashmap output for pairs
-            sexchr=$OPTARG;;
+            sexchr=$OPTARG; s_flag=true;;
         :) # Handle missing arguments for options requiring them
-            echo "Error: Option -${OPTARG} requires an argument." >&2
+            echo "Error: Option -$OPTARG requires an argument." >&2
             exit 1
             ;;
         \?) # Handle invalid options
-            echo "Error: Invalid option -${OPTARG}." >&2
+            echo "Error: Invalid option -$OPTARG." >&2
             exit 1
             ;;
     esac
 done
+
+
+    
+if ! $agp_flag 
+then
+    echo "Error: Missing Option. An agp file must be specified (-a)" >&2
+    exit 1
+fi
+
+    
+if ! $fasta_flag 
+then
+    echo "Error: Missing Option. A fasta file must be specified (-f) " >&2
+    exit 1
+fi
+
+    
+if ! $s_flag 
+then
+    echo "Error: Missing Option. A sex chromosome must be specified (-s)" >&2
+    exit 1
+fi
+
 
 set -e
 
