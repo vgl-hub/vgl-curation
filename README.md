@@ -6,15 +6,22 @@ TPF-less rapid curation of genomes
 
 ## Requirements
 
-Biopython v1.81
+Dependencies:
+ - Biopython v1.81
+ - gfastats v1.3.10
+ - pandas 
+ - ashmap
+ - natsort
 
-gfastats v1.2.6 
+Install dependencies with conda: 
+```
+bash install_dependencies.sh
+```
 
-pandas 
-
-mashmap
-
-natsort
+Then activate the conda environnement: 
+```
+conda activate curationenv
+```
 
 
 ## Getting started 
