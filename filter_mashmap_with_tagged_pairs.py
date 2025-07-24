@@ -36,9 +36,9 @@ os.makedirs(output_dir1, exist_ok=True)
 
 
 if args.query!="Hap_1" and args.query!="Hap_2":
-    raise ValueError("The query parameter should be Hap_1 or Hap_2")
+    raise SystemExit("The query parameter should be Hap_1 or Hap_2")
 if args.reference!="Hap_1" and args.reference!="Hap_2":
-    raise ValueError("The reference parameter should be Hap_1 or Hap_2")
+    raise SystemExit("The reference parameter should be Hap_1 or Hap_2")
 
 try:
     dico_supers_hap1= pd.read_csv(args.hap1, sep=r'\s+', header=None)
@@ -98,7 +98,7 @@ try:
         res_search1=dico_supers_hap1[dico_supers_hap1[0]==Scaffold1]
         res_search2=dico_supers_hap2[dico_supers_hap2[0]==Scaffold2]
         if len(res_search1)==0 or len(res_search2)==0:                  
-            raise ValueError("Names from the curated agp were not founds in the hap.unlocs.no_hapdups.agp file. Verify the names are consistants.")
+            raise SystemExit("Names from the curated agp were not founds in the hap.unlocs.no_hapdups.agp file. Verify that the names are consistants and all painted scaffolds have the tags Hap_1 or Hap_2")
         super1=dico_supers_hap1[dico_supers_hap1[0]==Scaffold1].iloc[0,1]
         super2=dico_supers_hap2[dico_supers_hap2[0]==Scaffold2].iloc[0,1]
         Paired.loc[index] = [super1, super2]

@@ -85,10 +85,17 @@ fi
 pth=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 printf "Rapid-curation-2.0 scripts located in: $pth\n"
 
+
+
 ## Programs/tools
 # use_gfastats=/vggpfs/fs3/vgl/store/nbrajuka/gfastats/build/bin/gfastats
 # use_seqkit=/vggpfs/fs3/vgl/store/nbrajuka/conda/envs/statistics/bin/seqkit
-printf "Dependencies:\nBiopython\npandas\ngfastats>=1.3.10\nmashmap\nnatsort" 
+printf "Dependencies:\nBiopython\npandas\ngfastats>=1.3.10\nmashmap\nnatsort\n\n" 
+
+printf "Gfastats version: \n"
+gfastats --version
+
+
 
 # could reasonably put everything in a function and just call for both haps. 
 echo "Creation Log File" >> logs/std.agp_to_path_hap1.${trimmed}.out 
