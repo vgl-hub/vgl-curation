@@ -90,6 +90,11 @@ while x < (len(agp_lines)):
 
 chr_list_filter = set([chr for chr in chr_list if chr != X_chr and chr != Y_chr and chr != W_chr and chr != Z_chr])
 
+reg_Z_chr=Z_chr+"[_$]"
+reg_X_chr=X_chr+"[_$]"
+reg_Y_chr=Y_chr+"[_$]"
+reg_W_chr=W_chr+"[_$]"
+
 scaff_num=1
 new_records=[]
 inter_chr_dict={}
@@ -100,15 +105,16 @@ with open(hap_sort) as original:
             inter_chr_dict[record.id]=("SUPER_"+str(scaff_num))
             record.id=("SUPER_"+str(scaff_num))
             scaff_num += 1
-        elif X_chr in record.id and X_chr != "":
+        elif re.search(reg_X_chr,record.id) and X_chr !="":
             sex_chr_asn(X_chr,"SUPER_X")
-        elif Y_chr in record.id and Y_chr != "":
+        elif re.search(reg_Y_chr,record.id) and Y_chr !="":
             sex_chr_asn(Y_chr,"SUPER_Y")
-        elif W_chr in record.id and W_chr !="":
+        elif re.search(reg_W_chr,record.id) and W_chr !="":
             sex_chr_asn(W_chr,"SUPER_W")
-        elif Z_chr in record.id and Z_chr !="":
+        elif re.search(reg_Z_chr,record.id) and Z_chr !="":
             sex_chr_asn(Z_chr,"SUPER_Z")
         elif record.id in unlocs_haps:
+            print(record.id)
             orig_name=unlocs_haps[record.id]
             super_name=inter_chr_dict[orig_name]
             inter_chr_dict[record.id]=re.sub(orig_name,super_name,record.id)
