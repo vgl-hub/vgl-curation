@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 ## for splitting the haplotypes
 ## After AGPcorrect but prior to unloc assignment 
 

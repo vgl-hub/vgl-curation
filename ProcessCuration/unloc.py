@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 ## For modifying the AGP to accomodate unlocalized pieces once in the haplotype-specific and corrected state. 
 ## and also to remove haplotig duplications from their origin haplotype - if they are painted it shouldn't be a problem to incorporate them into their correct haplotype. They just need to be removed from the original. 
 

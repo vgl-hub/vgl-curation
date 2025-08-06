@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 ## For the modification of scaffold names to reflect chromosomal assignment. 
 
 import csv
