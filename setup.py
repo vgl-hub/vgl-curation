@@ -18,11 +18,11 @@ setup(
     long_description=open('README.txt').read(),
     entry_points={
         'console_scripts': [
-            'AGPCorrect=AGPCorrect.py:main', 
-            'hap_split=hap_split.py:main',
-            'unloc=unloc.py:main',
-            'chromosome_assignment=chromosome_assignment.py:main',
-            'sak_generation=sak_generation.py:main',
+            'AGPCorrect=AGPCorrect:main', 
+            'hap_split=hap_split:main',
+            'unloc=unloc:main',
+            'chromosome_assignment=chromosome_assignment:main',
+            'sak_generation=sak_generation:main',
         ],
     },
     classifiers=[
