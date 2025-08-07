@@ -15,7 +15,7 @@ setup(
         "pandas >= 2.3", 
         "natsort >= 8.4.0",
     ],
-    long_description=open('README.txt').read(),
+    long_description=open('README.rst').read(),
     entry_points={
         'console_scripts': [
             'AGPCorrect=AGPCorrect:main', 
