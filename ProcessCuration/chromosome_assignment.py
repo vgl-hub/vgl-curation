@@ -10,7 +10,7 @@ from Bio.SeqRecord import SeqRecord
 import argparse
 import textwrap
 
-def sex_chr_asn(sex_chr,chr_name, record,inter_chr_dict): 
+def sex_chr_asn(sex_chr,chr_name, record, inter_chr_dict): 
     if 'unloc' not in record.id: 
         if sex_chr!=record.id: 
             exit
@@ -23,6 +23,8 @@ def sex_chr_asn(sex_chr,chr_name, record,inter_chr_dict):
             record.id=((record.id).replace(sex_chr,chr_name))
         else:
             exit
+    return record, inter_chr_dict
+
 
 def main():
         
@@ -91,10 +93,10 @@ def main():
 
     chr_list_filter = set([chr for chr in chr_list if chr != X_chr and chr != Y_chr and chr != W_chr and chr != Z_chr])
 
-    reg_Z_chr=Z_chr+"[_$]"
-    reg_X_chr=X_chr+"[_$]"
-    reg_Y_chr=Y_chr+"[_$]"
-    reg_W_chr=W_chr+"[_$]"
+    reg_Z_chr=Z_chr+"(?:_unloc_[0-9+])?$"
+    reg_X_chr=X_chr+"(?:_unloc_[0-9+])?$"
+    reg_Y_chr=Y_chr+"(?:_unloc_[0-9+])?$"
+    reg_W_chr=W_chr+"(?:_unloc_[0-9+])?$"
 
     scaff_num=1
     new_records=[]
@@ -107,13 +109,13 @@ def main():
                 record.id=("SUPER_"+str(scaff_num))
                 scaff_num += 1
             elif re.search(reg_X_chr,record.id) and X_chr !="":
-                sex_chr_asn(X_chr,"SUPER_X",record,inter_chr_dict)
+                record, inter_chr_dict=sex_chr_asn(X_chr,"SUPER_X",record, inter_chr_dict)
             elif re.search(reg_Y_chr,record.id) and Y_chr !="":
-                sex_chr_asn(Y_chr,"SUPER_Y",record,inter_chr_dict)
+                record, inter_chr_dict=sex_chr_asn(Y_chr,"SUPER_Y",record, inter_chr_dict)
             elif re.search(reg_W_chr,record.id) and W_chr !="":
-                sex_chr_asn(W_chr,"SUPER_W",record,inter_chr_dict)
+                record, inter_chr_dict=sex_chr_asn(W_chr,"SUPER_W",record, inter_chr_dict)
             elif re.search(reg_Z_chr,record.id) and Z_chr !="":
-                sex_chr_asn(Z_chr,"SUPER_Z",record,inter_chr_dict)
+                record, inter_chr_dict=sex_chr_asn(Z_chr,"SUPER_Z",record, inter_chr_dict)
             elif record.id in unlocs_haps:
                 print(record.id)
                 orig_name=unlocs_haps[record.id]
@@ -128,11 +130,6 @@ def main():
         for key in inter_chr_dict.keys():
             file.write("%s\t%s\n"%(key,inter_chr_dict[key]))
         file.close()
-
-    # with open((outdir+"/chromosomes.csv")) as file2:
-    # for value in inter_chr_dict.values():
-    #     print (value)
-
 
     handle=open((outdir+"/hap.chr_level.fa"),"w")
     SeqIO.write(new_records,handle,"fasta")
