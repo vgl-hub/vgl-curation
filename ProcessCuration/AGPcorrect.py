@@ -18,13 +18,13 @@ def main():
 
     if len(sys.argv) == 1 or (sys.argv[1] in ("-h", "--help")):
         print(
-            "Usage: AGPCorrect ref.fa(.gz) scaffs.agp >corrected_scaffs.agp",
+            "Usage: AGPCorrect ref.fa(.gz) scaffs.agp > corrected_scaffs.agp",
             file=sys.stderr,
         )
         sys.exit(0)
 
     if len(sys.argv) != 3:
-        sys.exit("Usage: AGPCorrect ref.fa(.gz) scaffs.agp >corrected_scaffs.agp")
+        sys.exit("Usage: AGPCorrect ref.fa(.gz) scaffs.agp > corrected_scaffs.agp")
 
     with Open(sys.argv[1]) as f:
         seqs = {seq.id: len(seq) for seq in SeqIO.parse(f, "fasta")} ## Generating a list of all sequences and their lengths from the fasta

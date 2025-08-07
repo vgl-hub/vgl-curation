@@ -12,9 +12,9 @@ import os
 def main():
 
     parser = argparse.ArgumentParser(
-                        prog='hap_split.py',
+                        prog='hap_split',
                         description='Separate the AGP file for two haplotypes into one AGP file for each haplotype. ',
-                        usage='hap_split.py -1 Hap_1/hap.agp -2 Hap_2/hap.agp -a curated_agp.agp ',
+                        usage='hap_split -1 Hap_1/hap.agp -2 Hap_2/hap.agp -a curated_agp.agp ',
                         formatter_class=argparse.RawTextHelpFormatter,
                         epilog=textwrap.dedent('''
                                             Outputs: 

@@ -11,9 +11,9 @@ import os
 
 def main():
     parser = argparse.ArgumentParser(
-                        prog='unloc.py',
+                        prog='unloc',
                         description="Modify the AGP to accomodate unlocalized pieces once in the haplotype-specific and corrected state. Also remove haplotig duplications from their origin haplotype - if they are painted it shouldn't be a problem to incorporate them into their correct haplotype. They just need to be removed from the original.",
-                        usage='unloc.py -a Hap_2/hap.agp -o Hap_2',
+                        usage='unloc -a Hap_2/hap.agp -o Hap_2',
                         formatter_class=argparse.RawTextHelpFormatter,
                         epilog=textwrap.dedent('''
                                             Outputs: 

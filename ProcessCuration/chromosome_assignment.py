@@ -27,9 +27,9 @@ def sex_chr_asn(sex_chr,chr_name, record,inter_chr_dict):
 def main():
         
     parser = argparse.ArgumentParser(
-                        prog='chromosome_assignment.py',
+                        prog='chromosome_assignment',
                         description="Modify scaffold names to reflect chromosomal assignment.",
-                        usage='chromosome_assignment.py -a Hap_2/hap.unlocs.no_hapdups.agp -f Hap_2/hap2_sorted.fasta -o Hap_2',
+                        usage='chromosome_assignment -a Hap_2/hap.unlocs.no_hapdups.agp -f Hap_2/hap2_sorted.fasta -o Hap_2',
                         formatter_class=argparse.RawTextHelpFormatter,
                         epilog=textwrap.dedent('''
                                             Outputs: 

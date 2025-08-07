@@ -14,7 +14,7 @@ def main():
     parser = argparse.ArgumentParser(
                         prog='filter_mashmap_with_tagged_pairs',
                         description='Filter Mashmap output to keep only Scaffolds paired with the tags Hap_1 and Hap_2',
-                        usage='filter_mashmap_with_tagged_pairs.py -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -q Hap_2 -r Hap_1 -agp curated_agp_with_micro_tags.agp -m mashmap.out -s W -o results/ ',
+                        usage='filter_mashmap_with_tagged_pairs -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -q Hap_2 -r Hap_1 -agp curated_agp_with_micro_tags.agp -m mashmap.out -s W -o results/ ',
                         formatter_class=argparse.RawTextHelpFormatter,
                         epilog=textwrap.dedent('''
                                             Outputs: 
