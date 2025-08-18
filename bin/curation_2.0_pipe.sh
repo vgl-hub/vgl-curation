@@ -54,7 +54,7 @@ missing_dep=0
 
 if ! command -v gfastats >/dev/null 2>&1; then
     if $install_dep; then
-        conda install -y gfastats
+        conda install -c bioconda -y gfastats
     else
         echo "Missing Dependency: gfastats. Run with -d option to install missing dependencies with conda."
     missing_dep=1
@@ -62,7 +62,7 @@ if ! command -v gfastats >/dev/null 2>&1; then
 fi
 if ! command -v mashmap >/dev/null 2>&1; then
     if $install_dep; then
-        conda install -y mashmap
+        conda install -c bioconda -y mashmap
     else
         echo "Missing Dependency: MashMap. Run with -d option to install missing dependencies with conda"
         missing_dep=1
