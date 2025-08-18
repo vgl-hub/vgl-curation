@@ -7,7 +7,7 @@ setup(
     author="Delphine Lariviere",
     description="Process manually curated genome assembly",
     url="https://github.com/Delphine-L/vgl-curation",
-    scripts=['ProcessCuration/AGPCorrect.py','ProcessCuration/hap_split.py','ProcessCuration/unloc.py','ProcessCuration/chromosome_assignment.py','ProcessCuration/sak_generation.py'],
+    scripts=['ProcessCuration/AGPcorrect.py','ProcessCuration/hap_split.py','ProcessCuration/unloc.py','ProcessCuration/chromosome_assignment.py','ProcessCuration/sak_generation.py'],
     license='MIT License',
     packages=['ProcessCuration'],
     install_requires=[
@@ -18,7 +18,7 @@ setup(
     long_description=open('README.rst').read(),
     entry_points={
         'console_scripts': [
-            'AGPCorrect=AGPCorrect:main', 
+            'AGPcorrect=AGPcorrect:main', 
             'hap_split=hap_split:main',
             'unloc=unloc:main',
             'chromosome_assignment=chromosome_assignment:main',
