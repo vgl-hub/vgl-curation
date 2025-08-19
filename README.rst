@@ -28,11 +28,7 @@ Tools usage
 
 Available tools:
 
-* AGPCorrect : Correcting AGP for sequence lengths
-
-* hap_split: Splitting the haplotypes from the corrected AGP
-
-* unloc: Assigning unlocs before the agp is imposed on the fasta and remove haplotig duplications from their origin haplotype
+* split_agp: Correcting AGP for sequence lengths, splitting the haplotypes from the corrected AGP, assigning unlocs before the agp is imposed on the fasta, and remove haplotig duplications from their origin haplotype.
 
 * chromosome_assignment: Substituting scaffold for chromosome assignments
 
@@ -40,8 +36,8 @@ Available tools:
 
 
 
-AGPCorrect
------------
+split_agp
+---------
 
 Inputs:
 
@@ -49,58 +45,21 @@ Inputs:
 
 * Curated AGP generated with PretextView (See manual in `docs` for curation tips)
 
+* Output Directory (Optionnal, default `./`)
 
 Usage::
 
-    AGPcorrect assembly.fasta curated.agp > corrected.agp 
+    split_agp -f <Assembly fasta file> -a <Curated AGP> -o <Output Directory>
 
 Output:
 
 * Corrected AGP file
 
+* AGP file for each haplotype in repositories  `<Output Directory>/Hap_1/` and `<Output Directory>/Hap_2/`
 
-hap_split
-----------
+* An agp file with the unloc assigned and the duplicated haplotigs removed. (<Output Directory>/<Haplotype Directory>/hap.unlocs.no_hapdups.agp)
 
-Inputs:
-
-* Corrected AGP file (-a)
-
-* Output AGP file for Haplotype 1 (-1) 
-
-* Output AGP file for Haplotype 2 (-2) 
-
-
-Usage::
-
-    hap_split -a corrected.agp -1 Hap_1/hap1.agp -2 Hap_2/hap2.agp 
-
-
-Output:
-
-* AGP file for each haplotype
-
-
-
-unloc
------
-
-Inputs:
- 
-* AGP file or one haplotype (-a)
-
-* Output directory (-o)
-
-Usage::
-
-    unloc -a Hap_1/hap1.agp -o Hap_1
-
-
-Output:
-
-* An agp file with the unloc assigned and the duplicated haplotigs removed. (<outdir>/hap.unlocs.no_hapdups.agp)
-
-* Removed haplotigs (<outdir>/haplotigs.agp)
+* Removed haplotigs (<Output Directory>>/<Haplotype Directory>/haplotigs.agp)
 
 
 chromosome_assignment
@@ -182,12 +141,7 @@ Inputs:
 
 Split AGP and assign unlocs::
 
-    AGPcorrect <fasta> <agp> > corrected.agp 
-
-    hap_split  -1 Hap_1/hap1.agp -2 Hap_2/hap2.agp -a corrected.agp   
-
-    unloc -a Hap_1/hap1.agp -o Hap_1
-    unloc -a Hap_2/hap2.agp -o Hap_2
+    split_agp -f <fasta> -a <agp>
 
 
 Run gfastats to reconciliate the curated agp with the fasta file for each haplotype and sort them by size::

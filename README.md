@@ -47,63 +47,29 @@ Create Conda environnement:
 
 
 Available tools:
-- AGPCorrect : Correcting AGP for sequence lengths
-- hap_split: Splitting the haplotypes from the corrected AGP
-- unloc: Assigning unlocs before the agp is imposed on the fasta and remove haplotig duplications from their origin haplotype
+- split_agp: Correcting AGP for sequence lengths, splitting the haplotypes from the corrected AGP, assigning unlocs before the agp is imposed on the fasta, and remove haplotig duplications from their origin haplotype.
 - chromosome_assignment: Substituting scaffold for chromosome assignments
 - sak_generation: Processing Mashmap output for reorientation and renaming of scaffolds in haplotype 2.
 
 
 
-#### AGPCorrect
+#### split_agp
 
 Inputs:
 -Fasta file of the Assembly with the two haplotypes
 -Curated AGP generated with PretextView (See manual in `docs` for curation tips)
+-Output Directory (Optionnal, default `./`)
 
 Usage:
 ```
-    AGPcorrect assembly.fasta curated.agp > corrected.agp 
+    split_agp -f <Assembly fasta file> -a <Curated AGP> -o <Output Directory>
 ```
 
 Output:
 - Corrected AGP file
-
-
-#### hap_split
-
-
-Inputs:
-- Corrected AGP file (-a)
-- Output AGP file for Haplotype 1 (-1) 
-- Output AGP file for Haplotype 2 (-2) 
-
-
-Usage:
-```
-    hap_split -a corrected.agp -1 Hap_1/hap1.agp -2 Hap_2/hap2.agp 
-```
-
-
-Output:
-- AGP file for each haplotype
-
-
-
-####  unloc
-
-Inputs:
-- AGP file or one haplotype (-a)
-- Output directory (-o)
-
-Usage:
-```
-    unloc -a Hap_1/hap1.agp -o Hap_1
-```
-
-Output:
-- An agp file with the unloc assigned and the duplicated haplotigs removed. (<outdir>/hap.unlocs.no_hapdups.agp)
-- Removed haplotigs (<outdir>/haplotigs.agp)
+- AGP file for each haplotype in repositories  `<Output Directory>/Hap_1/` and `<Output Directory>/Hap_2/`
+- An agp file with the unloc assigned and the duplicated haplotigs removed. (<Output Directory>/<Haplotype Directory>/hap.unlocs.no_hapdups.agp)
+- Removed haplotigs (<Output Directory>>/<Haplotype Directory>/haplotigs.agp)
 
 
 ####  chromosome_assignment
@@ -137,14 +103,13 @@ Inputs:
 
 Usage:
 ```
-    filter_mashmap_with_tagged_pairs -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -m mashmap.out -q Hap_2 -r Hap_1 -a corrected.agp  -s W -o results/ 
+     sak_generation  -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -r Hap_1 -q Hap_2 -a corrected.agp -m  mashmap.out -s <Heterogametic Chromosome> -o <Output Directory>>
 ```
 
 Output:
 - SAK file for gfastats reversing and renaming of Haplotype 2 sequences (<out_dir>/rvcp.sak) 
 - Table with the orientation of Hap1 vs Hap2 scaffolds (The sign is the most represented in the mashmap alignments between two sequences) (<out_dir>/orientation.tsv)  
 - The Mapping between hap2 and hap1 names (<out_dir>/hap2.vs.hap1.tsv) 
-
 
 
 ## Run the whole Pipeline
@@ -162,12 +127,7 @@ Inputs:
 
 Split AGP and assign unlocs:
 ```
-    AGPcorrect <fasta> <agp> > corrected.agp 
-
-    hap_split  -1 Hap_1/hap1.agp -2 Hap_2/hap2.agp -a corrected.agp   
-
-    unloc -a Hap_1/hap1.agp -o Hap_1
-    unloc -a Hap_2/hap2.agp -o Hap_2
+    split_agp -f <fasta> -a <agp>
 ```
 
 Run gfastats to reconciliate the curated agp with the fasta file for each haplotype and sort them by size:
