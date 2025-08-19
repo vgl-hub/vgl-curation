@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 setup(
@@ -7,9 +7,11 @@ setup(
     author="Delphine Lariviere",
     description="Process manually curated genome assembly",
     url="https://github.com/Delphine-L/vgl-curation",
-    scripts=['ProcessCuration/AGPcorrect.py','ProcessCuration/hap_split.py','ProcessCuration/unloc.py','ProcessCuration/chromosome_assignment.py','ProcessCuration/sak_generation.py'],
-    license='MIT License',
-    packages=['ProcessCuration'],
+    scripts=['src/split_agp.py','src/chromosome_assignment.py','src/sak_generation.py'],
+    license='MIT License',    
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+
     install_requires=[
         "biopython >= 1.85",
         "pandas >= 2.3", 
@@ -18,9 +20,7 @@ setup(
     long_description=open('README.rst').read(),
     entry_points={
         'console_scripts': [
-            'AGPcorrect=AGPcorrect:main', 
-            'hap_split=hap_split:main',
-            'unloc=unloc:main',
+            'split_agp=split_agp:main', 
             'chromosome_assignment=chromosome_assignment:main',
             'sak_generation=sak_generation:main',
         ],

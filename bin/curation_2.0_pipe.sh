@@ -68,8 +68,9 @@ if ! command -v mashmap >/dev/null 2>&1; then
         missing_dep=1
     fi
 fi
-    if ! command -v AGPcorrect >/dev/null 2>&1; then
+    if ! command -v split_agp >/dev/null 2>&1; then
         echo "Missing Dependency: ProcessCuration. Please install ProcessCuration before running"
+        missing_dep=1
 fi
 
 if ! $agp_flag 
@@ -125,21 +126,11 @@ echo "Creation Log/Error File for Mashmap" >> logs/std.mashmap.${trimmed}.out
 
 printf "\n\nOriginal assembly: ${fasta} \nPretextView generated AGP: ${agpfile}\nSex chromosome: ${sexchr}\n\n" ### but checks/breakpoints for if these aren't provided.
 
-printf "Running AGPcorrect on the PretextView generated agp to correct for sequence lengths.\n" 
-printf " - AGPcorrect ${fasta} ${agpfile}\n\n"
 
-AGPcorrect ${fasta} ${agpfile} > corrected.agp 
+printf "Running split_agp on the PretextView generated agp to correct for sequence lengths, split agps, process unlocs and remove duplicated haplotigs.\n" 
 
-printf "\n\nSplitting the haplotypes from the corrected AGP. Outputs sent to respective directories.\n"
-printf " - hap_split -1 Hap_1/hap.agp -2 Hap_2/hap.agp -a corrected.agp\n\n"
-hap_split  -1 Hap_1/hap.agp -2 Hap_2/hap.agp -a corrected.agp   
+split_agp -f ${fasta} -a ${agpfile}
 
-printf "\n\nAssigning unlocs before the agp is imposed on the fasta.\n"
-## If the --agp-to-path in the next block is run first the unlocs will get assimilated into their main assigned scaffolds - they need to be differentiated first.
-printf " - unloc -a Hap_1/hap.agp -o Hap_1 \n\n" 
-unloc -a Hap_1/hap.agp -o Hap_1  
-printf "\n\n - unloc -a Hap_2/hap.agp -o Hap_2 \n\n"
-unloc -a Hap_2/hap.agp -o Hap_2 
 
 printf "\n\nImposing the haplotypic agp on the original fasta to generate a curated fasta.(See logs)\n\n"
 printf " - gfastats $fasta --agp-to-path Hap_1/hap.unlocs.no_hapdups.agp -o Hap_1/hap.unlocs.no_hapdups.fa \n"
