@@ -114,17 +114,9 @@ def main():
         if  ((Paired['Hap_1'] == row[[args.query,args.reference]].iloc[1]) & (Paired["Hap_2"] == row[[args.query,args.reference]].iloc[0])).any():
             filtered_mashmap.loc[len(filtered_mashmap)] = row
 
-
-    # Merge with indicator to see where rows originate
-    merged_df = Paired[['Hap_1','Hap_2']].merge(filtered_mashmap[['Hap_1','Hap_2']], how='left', indicator=True)
-    # Filter for rows not present in Mashmap
-    rows_not_in_mashmap = merged_df[merged_df['_merge'] == 'left_only']
-    if len(rows_not_in_mashmap)>0:
-        rows_not_in_mashmap[['Hap_1','Hap_2']].to_csv(args.out_dir+"/missing.tsv", index=False, header=True, sep="\t")
-        raise SystemExit("Error: One or more pairs of scaffolds identified by curation are not found in mashmap. See "+args.out_dir+"missing.tsv" )
-
-
     orientations = filtered_mashmap[["Hap_1","Hap_2","Orientation"]]
+
+
 
     # Group by Reference and Query, then count Sign occurrences
     counts = orientations.groupby(["Hap_1","Hap_2"])["Orientation"].value_counts()
@@ -134,8 +126,18 @@ def main():
 
     # Combine into a final dataframe
     result = most_frequent_sign.to_frame(name='Main Orientation')
-
     result=result.reset_index()
+
+    # Merge with indicator to see where rows originate
+    merged_df = Paired[['Hap_1','Hap_2']].merge(result[['Hap_1','Hap_2']], how='left', indicator=True)
+    # Filter for rows not present in Mashmap
+    rows_not_in_mashmap = merged_df[merged_df['_merge'] == 'left_only']
+    if len(rows_not_in_mashmap)>0:
+        rows_not_in_mashmap[['Hap_1','Hap_2']].to_csv(args.out_dir+"/missing.tsv", index=False, header=True, sep="\t")
+        print("Warning: One or more pairs of scaffolds identified by curation are not found in mashmap. See "+args.out_dir+"missing.tsv" )
+        rows_not_in_mashmap.loc[:, "Main Orientation"] = "+"
+        result = pd.concat([result, rows_not_in_mashmap[["Hap_1","Hap_2","Main Orientation"]]])
+
 
 
     result['Hap_1'] = pd.Categorical(result['Hap_1'], categories=natsorted(result['Hap_1'].unique()), ordered=True)
