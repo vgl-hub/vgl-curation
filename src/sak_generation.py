@@ -103,17 +103,26 @@ def main():
             res_search1=dico_supers_hap1[dico_supers_hap1[0]==Scaffold1]
             res_search2=dico_supers_hap2[dico_supers_hap2[0]==Scaffold2]
             if len(res_search1)==0 or len(res_search2)==0:                  
-                raise SystemExit("Names from the curated agp were not founds in the hap.unlocs.no_hapdups.agp file. Verify that the names are consistants and all painted scaffolds have the tags Hap_1 or Hap_2")
+                raise SystemExit("Error: Names from the curated agp were not founds in the hap.unlocs.no_hapdups.agp file. Verify that the names are consistants and all painted scaffolds have the tags Hap_1 or Hap_2")
             super1=dico_supers_hap1[dico_supers_hap1[0]==Scaffold1].iloc[0,1]
             super2=dico_supers_hap2[dico_supers_hap2[0]==Scaffold2].iloc[0,1]
             Paired.loc[index] = [super1, super2]
     except Exception as e:
         print(f"An error occurred: {e}")
 
-
     for index, row in mashmap_out.iterrows():
         if  ((Paired['Hap_1'] == row[[args.query,args.reference]].iloc[1]) & (Paired["Hap_2"] == row[[args.query,args.reference]].iloc[0])).any():
             filtered_mashmap.loc[len(filtered_mashmap)] = row
+
+
+    # Merge with indicator to see where rows originate
+    merged_df = Paired[['Hap_1','Hap_2']].merge(filtered_mashmap[['Hap_1','Hap_2']], how='left', indicator=True)
+    # Filter for rows not present in Mashmap
+    rows_not_in_mashmap = merged_df[merged_df['_merge'] == 'left_only']
+    if len(rows_not_in_mashmap)>0:
+        rows_not_in_mashmap[['Hap_1','Hap_2']].to_csv(args.out_dir+"/missing.tsv", index=False, header=True, sep="\t")
+        raise SystemExit("Error: One or more pairs of scaffolds identified by curation are not found in mashmap. See "+args.out_dir+"missing.tsv" )
+
 
     orientations = filtered_mashmap[["Hap_1","Hap_2","Orientation"]]
 
