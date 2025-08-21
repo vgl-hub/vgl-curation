@@ -40,9 +40,9 @@ def main():
     os.makedirs(args.output_dir, exist_ok=True)
 
 
-    AGPcorrect(args.fasta, args.agp, args.output_dir+'corrected_agp')
+    AGPcorrect(args.fasta, args.agp, args.output_dir+'corrected.agp')
 
-    hap_split(args.output_dir+'corrected_agp',args.output_dir+'Hap_1/hap1.agp',args.output_dir+'Hap_2/hap2.agp')
+    hap_split(args.output_dir+'corrected.agp',args.output_dir+'Hap_1/hap1.agp',args.output_dir+'Hap_2/hap2.agp')
 
     print("\nRun unloc on Haplotype 1\n")
     unloc(args.output_dir+'Hap_1/hap1.agp',args.output_dir+'Hap_1/')
