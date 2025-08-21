@@ -135,6 +135,7 @@ def main():
     if len(rows_not_in_mashmap)>0:
         rows_not_in_mashmap[['Hap_1','Hap_2']].to_csv(args.out_dir+"/missing.tsv", index=False, header=True, sep="\t")
         print("Warning: One or more pairs of scaffolds identified by curation are not found in mashmap. See "+args.out_dir+"missing.tsv" )
+        rows_not_in_mashmap= rows_not_in_mashmap.copy()
         rows_not_in_mashmap.loc[:, "Main Orientation"] = "+"
         result = pd.concat([result, rows_not_in_mashmap[["Hap_1","Hap_2","Main Orientation"]]])
 

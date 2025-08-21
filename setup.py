@@ -11,7 +11,6 @@ setup(
     license='MIT License',    
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-
     install_requires=[
         "biopython >= 1.85",
         "pandas >= 2.3", 
