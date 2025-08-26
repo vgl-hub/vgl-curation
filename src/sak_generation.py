@@ -7,6 +7,7 @@ from natsort import natsorted
 import textwrap
 import os
 import re
+import sys
 
 
 def main():
@@ -14,7 +15,7 @@ def main():
     parser = argparse.ArgumentParser(
                         prog='filter_mashmap_with_tagged_pairs',
                         description='Filter Mashmap output to keep only Scaffolds paired with the tags Hap_1 and Hap_2',
-                        usage='filter_mashmap_with_tagged_pairs -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -q Hap_2 -r Hap_1 -agp curated_agp_with_micro_tags.agp -m mashmap.out -s W -o results/ ',
+                        usage='filter_mashmap_with_tagged_pairs -1 Hap_1/inter_chr.tsv -2 Hap_2/inter_chr.tsv -q Hap_2 -r Hap_1 -agp curated_agp_with_micro_tags.agp -m mashmap.out -o results/ ',
                         formatter_class=argparse.RawTextHelpFormatter,
                         epilog=textwrap.dedent('''
                                             Outputs: 
@@ -30,7 +31,6 @@ def main():
     parser.add_argument('-a', '--agp', dest="agp", required=True, help='Path to the curated AGP file (with the tags Hap_1 and Hap_2)')       
     parser.add_argument('-m', '--mashmap', dest="mashmap", required=True, help='Path to the curated Mashmap output')  
     parser.add_argument('-o', '--out_dir', dest="out_dir", required=True, help='Path to output Prefix')  
-    parser.add_argument('-s', '--sexchr', dest="sexchr", required=True, help='Letter marking the sexual chromosome only present in heterogametic individuals (e.g Y in humans, W in birds)')  
     args = parser.parse_args()
 
 
@@ -75,8 +75,17 @@ def main():
         print(f"Error: The file '{file_name}' was not found.")
 
     filtered_agp = pd.read_table(StringIO(output_agp),sep=r'\s+',header=None)
-    if len(filtered_agp[filtered_agp[9]=="Painted_"+args.sexchr])!=0:
+    if len(filtered_agp[filtered_agp[9]=="Painted_Y"])!=0 or len(filtered_agp[filtered_agp[9]=="Painted_W"])!=0:
         filtered_agp=filtered_agp[~filtered_agp[9].str.contains('Painted_')]
+
+    filtered_agp=filtered_agp[[0,5,8,9,10]]
+    duplications=filtered_agp[filtered_agp.duplicated()]
+    if len(duplications)>0:
+        print("Error: The following scaffolds are duplicated in the agp: ", file=sys.stderr)
+        print(duplications.to_string(index=False, header=False), file=sys.stderr) 
+        raise SystemExit("Please verify your curation.")
+
+    filtered_agp=filtered_agp.reset_index(drop=True)
 
     dico_micro=pd.DataFrame(columns=['Hap_1', 'Hap_2'])
 
@@ -85,12 +94,12 @@ def main():
 
     for index, row in filtered_agp.iterrows():  
         if index % 2 == 0:
-            even_value=row.iloc[0] 
-            even_hap=row.iloc[10]
+            even_value=row[0] 
+            even_hap=row[10]
         else:
             index_new=len(dico_micro)
             tmp=pd.DataFrame(columns=['Hap_1', 'Hap_2'])
-            tmp.loc[0,row.iloc[10]]=row.iloc[0]
+            tmp.loc[0,row[10]]=row[0]
             tmp.loc[0,even_hap]=even_value
             dico_micro.loc[len(dico_micro)] = tmp.loc[0]
 
