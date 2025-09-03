@@ -149,26 +149,41 @@ def main():
         result = pd.concat([result, rows_not_in_mashmap[["Hap_1","Hap_2","Main Orientation"]]])
 
 
-
     result['Hap_1'] = pd.Categorical(result['Hap_1'], categories=natsorted(result['Hap_1'].unique()), ordered=True)
-    result = result.sort_values(by='Hap_1')
+    result = result.sort_values(by='Hap_1', ignore_index=True)
 
-    result.to_csv(args.out_dir+"/orientation.tsv", index=True, header=True, sep="\t")
+    results_with_unloc=result.copy()
 
-    result['Hap_2'] = result['Hap_2'].astype(str) + "_oldname"
+    for i, row in result.iterrows():
+        super_name2=row['Hap_2']
+        super_name1=row['Hap_1']
+        unloc_search=dico_supers_hap2[dico_supers_hap2[1].str.contains(super_name2+"_unloc", case=False, na=False)]
+        if len(unloc_search)!=0 : 
+            for j, unloc in unloc_search.iterrows():
+                unloc_old_name=unloc[1]
+                unloc_new_name=unloc_old_name.replace(super_name2, super_name1)
+                results_with_unloc.loc[len(results_with_unloc)] = [unloc_new_name, unloc_old_name, "+"]
+
+        
+    results_with_unloc.to_csv(args.out_dir+"/orientation.tsv", index=True, header=True, sep="\t")
+    
+    renaming=results_with_unloc[results_with_unloc['Hap_1']!=results_with_unloc['Hap_2']][['Hap_1','Hap_2']]
+    renaming['Hap_2'] = renaming['Hap_2'].astype(str) + "_oldname"
+    renaming['Command']="RENAME"
+
+
+    results_with_unloc['Hap_2'] = results_with_unloc['Hap_2'].astype(str) + "_oldname"
 
     to_reverse = pd.DataFrame(columns=['Command', 'Hap_2'])
-    to_reverse['Hap_2']=result[result['Main Orientation']=='-']["Hap_2"]
+    to_reverse['Hap_2']=results_with_unloc[results_with_unloc['Main Orientation']=='-']["Hap_2"]
     to_reverse['Command']="RVCP"
 
 
     #to_reverse.to_csv(args.out_dir+"/rvcp.sak", index=False, header=False, sep="\t")
 
-    renaming=result[['Hap_1','Hap_2']]
     #renaming=renaming.rename(columns={'Hap_1':'New_name','Hap_2':'Old_name'})
-    renaming['Command']="RENAME"
-    #renaming[['Command','Hap_2','Hap_1']].to_csv(args.out_dir+"/hap2.vs.hap1.tsv", index=False, header=false, sep="\t")
 
+    #renaming[['Command','Hap_2','Hap_1']].to_csv(args.out_dir+"/hap2.vs.hap1.tsv", index=False, header=false, sep="\t")
 
     to_reverse['Hap_1']=''
 
