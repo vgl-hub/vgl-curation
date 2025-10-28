@@ -57,7 +57,9 @@ def main():
         print(f"Error: The file '{args.mashmap}' was not found.")
 
     mashmap_out=mashmap_out.rename(columns={0:args.query, 1:'Query length',2:'Query 0-based start',3:'Query 0-based end',4:'Orientation',5:args.reference, 6:'Target length', 7:'Target 0-based start', 8:'Target 0-based end',12:'Mapping nucleotide identity'})
-
+    mashmap_out["Query match length"]=mashmap_out["Query 0-based end"]-mashmap_out["Query 0-based start"]
+    mashmap_out["Target match length"]=mashmap_out["Target 0-based end"]-mashmap_out["Target 0-based start"]
+    
     filtered_mashmap=pd.DataFrame(columns=mashmap_out.columns)
 
     file_agp = args.agp
@@ -123,12 +125,12 @@ def main():
         if  ((Paired['Hap_1'] == row[[args.query,args.reference]].iloc[1]) & (Paired["Hap_2"] == row[[args.query,args.reference]].iloc[0])).any():
             filtered_mashmap.loc[len(filtered_mashmap)] = row
 
-    orientations = filtered_mashmap[["Hap_1","Hap_2","Orientation"]]
+    orientations = filtered_mashmap[["Hap_1","Hap_2","Orientation","Query match length","Target match length"]]
 
 
 
     # Group by Reference and Query, then count Sign occurrences
-    counts = orientations.groupby(["Hap_1","Hap_2"])["Orientation"].value_counts()
+    counts = orientations.groupby(["Hap_1","Hap_2","Orientation"])["Query match length"].sum()
 
     # Get the sign with the highest count per group
     most_frequent_sign = counts.groupby(level=[0, 1]).idxmax().apply(lambda x: x[2])  # x is a tuple (Reference, query, sign)
