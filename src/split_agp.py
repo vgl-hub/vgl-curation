@@ -191,10 +191,12 @@ def hap_split(corrected_agp,path_agp1,path_agp2):
             elif current_hap=='Hap_2':
                 H2_lines.append(line)
         else:
-            if 'H1' in line[5]:
+            if 'H1' in line[5] or 'hap1' in line[5] :
                 H1_lines.append(line)
-            elif 'H2' in line[5]:
+            elif 'H2' in line[5] or 'hap2' in line[5]:
                 H2_lines.append(line)
+            else:
+                print("Warning: Scaffold "+line[5]+" not assigned to any haplotype. It will be skipped. Verify your scaffolds have haplotype markers type 'H1' or 'hap1'.", file=sys.stderr)
 
     #Create output directories
     if '/' in path_agp1:
