@@ -1,0 +1,144 @@
+#!/usr/bin/env python3
+
+## For the modification of scaffold names to reflect chromosomal assignment. 
+
+import csv
+import re
+from Bio import SeqIO, Seq
+from Bio.SeqRecord import SeqRecord
+
+import argparse
+import textwrap
+
+def sex_chr_asn(sex_chr,chr_name, record, inter_chr_dict): 
+    if 'unloc' not in record.id: 
+        if sex_chr!=record.id: 
+            exit
+        else:
+            inter_chr_dict[record.id]=((record.id).replace(sex_chr,chr_name))
+            record.id=((record.id).replace(sex_chr,chr_name))
+    if 'unloc' in record.id:
+        if re.sub("_unloc_[0-9]+$","",record.id) == sex_chr:
+            inter_chr_dict[record.id]=((record.id)).replace(sex_chr,chr_name)
+            record.id=((record.id).replace(sex_chr,chr_name))
+        else:
+            exit
+    return record, inter_chr_dict
+
+
+def main():
+        
+    parser = argparse.ArgumentParser(
+                        prog='chromosome_assignment',
+                        description="Modify scaffold names to reflect chromosomal assignment.",
+                        usage='chromosome_assignment -a Hap_2/hap.unlocs.no_hapdups.agp -f Hap_2/hap2_sorted.fasta -o Hap_2',
+                        formatter_class=argparse.RawTextHelpFormatter,
+                        epilog=textwrap.dedent('''
+                                            Outputs: 
+                                            - {output_dir}/inter_chr.tsv:  Table mapping the scaffolds to their chromosomal assignment.
+                                            - {output_dir}/hap.chr_level.fa:  Fasta file with chromosomal level sequences.
+                                            '''))
+    parser.add_argument('-a', '--agp', required=True, help='Path to the haplotype AGP without haplotig duplications')
+    parser.add_argument('-f', '--fasta', required=True, help='Path to the sorted fasta file')
+    parser.add_argument('-o', '--output_dir', required=True, help='Output directory')  
+    args = parser.parse_args()
+
+
+
+    outdir=args.output_dir
+    hap_agp=args.agp
+    hap_sort=args.fasta
+
+    agp_lines=[]
+    with open(hap_agp) as file:
+        agp = csv.reader(file,delimiter='\t')
+        for line in agp:
+            agp_lines.append(line)
+
+    file.close()
+
+    x=0
+    unlocs_haps={}
+    chr_list=[]
+    X_chr=""
+    Y_chr=""
+    W_chr=""
+    Z_chr=""
+    sex_chr=[]
+
+    while x < (len(agp_lines)):
+        line = agp_lines[x]
+        if "#" in line[0]:
+            x+=1 
+            continue
+        elif line[9]=="Painted" or line[8]=="proximity_ligation":
+            if line[10]=="X":
+                X_chr=line[0]
+                sex_chr.append(line[0])
+            elif line[10]=="Y":
+                Y_chr=line[0]
+                sex_chr.append(line[0])
+            elif line[10]=="W":
+                W_chr=line[0]
+                sex_chr.append(line[0])
+            elif line[10]=="Z":
+                Z_chr=line[0]
+                sex_chr.append(line[0])
+            elif line[10]=="Unloc":
+                orig_name=re.sub('_unloc_[0-9]+$','',line[0])
+                unlocs_haps[line[0]]=orig_name
+            else:
+                chr_list.append(line[0])          
+        x+=1 
+
+    chr_list_filter = set([chr for chr in chr_list if chr != X_chr and chr != Y_chr and chr != W_chr and chr != Z_chr])
+
+    reg_Z_chr=Z_chr+"(?:_unloc_[0-9+])?$"
+    reg_X_chr=X_chr+"(?:_unloc_[0-9+])?$"
+    reg_Y_chr=Y_chr+"(?:_unloc_[0-9+])?$"
+    reg_W_chr=W_chr+"(?:_unloc_[0-9+])?$"
+
+    scaff_num=1
+    new_records=[]
+    inter_chr_dict={}
+    with open(hap_sort) as original:
+        records = SeqIO.parse(original, 'fasta')
+        for record in records:
+            if record.id in chr_list_filter:
+                inter_chr_dict[record.id]=("SUPER_"+str(scaff_num))
+                record.id=("SUPER_"+str(scaff_num))
+                scaff_num += 1
+            elif re.search(reg_X_chr,record.id) and X_chr !="":
+                record, inter_chr_dict=sex_chr_asn(X_chr,"SUPER_X",record, inter_chr_dict)
+            elif re.search(reg_Y_chr,record.id) and Y_chr !="":
+                record, inter_chr_dict=sex_chr_asn(Y_chr,"SUPER_Y",record, inter_chr_dict)
+            elif re.search(reg_W_chr,record.id) and W_chr !="":
+                record, inter_chr_dict=sex_chr_asn(W_chr,"SUPER_W",record, inter_chr_dict)
+            elif re.search(reg_Z_chr,record.id) and Z_chr !="":
+                record, inter_chr_dict=sex_chr_asn(Z_chr,"SUPER_Z",record, inter_chr_dict)
+            elif record.id in unlocs_haps:
+                print(record.id)
+                orig_name=unlocs_haps[record.id]
+                super_name=inter_chr_dict[orig_name]
+                inter_chr_dict[record.id]=re.sub(orig_name,super_name,record.id)
+                record.id=(re.sub(orig_name,super_name,record.id))
+
+            new_records.append(SeqRecord(record.seq,id=record.id, description=""))
+
+
+    with open((outdir+"/inter_chr.tsv"),'w') as file: 
+        for key in inter_chr_dict.keys():
+            file.write("%s\t%s\n"%(key,inter_chr_dict[key]))
+        file.close()
+
+    handle=open((outdir+"/hap.chr_level.fa"),"w")
+    SeqIO.write(new_records,handle,"fasta")
+    handle.close()
+        
+
+
+
+if __name__ == "__main__":
+    main()
+        
+
