@@ -266,10 +266,11 @@ def unloc(hap_agp,output_dir):
 
     scaffs_with_unlocs=[]
     unloc_num=1
-    for index in unlocs: ##This assumes unlocs are placed at the end of scaffolds 
+    for index in unlocs: ##This assumes unlocs are placed at the end of scaffolds
         scaff=(agp_df.iloc[index].to_list())[0]
         agp_df.loc[index,'chr_start']=1
-        agp_df.loc[index,'chr_end']=agp_df.loc[index,'scaff_end']
+        agp_df.loc[index,'chr_end'] = int(agp_df.loc[index,'scaff_end']) - int(agp_df.loc[index,'scaff_start']) + 1
+        agp_df.loc[index,'#_scaffs']=1
         if scaff in scaffs_with_unlocs:
             unloc_num+=1
             agp_df.loc[index,'chr']=agp_df.loc[index,'chr']+"_unloc_"+str(unloc_num)
